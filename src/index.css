@@ -1,0 +1,691 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --color-hub-navy: #1a3352;
+  --color-hub-navy-light: #2a4a6e;
+  --color-hub-cream: #f7f5f0;
+  --color-hub-muted: #6b7280;
+}
+
+:root {
+  --user-gradient: linear-gradient(
+    90deg,
+    #ff3d81,
+    #ff8a3d,
+    #ffe93d,
+    #3dff8a,
+    #3dcfff,
+    #a83dff,
+    #ff3d81
+  );
+  --gradient-speed: 4s;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply m-0 min-h-screen bg-white font-sans text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-100;
+}
+
+@keyframes bell-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.15);
+  }
+}
+
+.animate-bell-pulse {
+  animation: bell-pulse 2s ease-in-out infinite;
+}
+
+@keyframes auth-card-shuffle-login {
+  0% {
+    opacity: 0;
+    transform: translateX(40px) translateY(10px) rotate(6deg) scale(0.94);
+  }
+  75% {
+    opacity: 1;
+    transform: translateX(-4px) translateY(-2px) rotate(-1.5deg) scale(1.015);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateY(0) rotate(0deg) scale(1);
+  }
+}
+
+@keyframes auth-card-shuffle-register {
+  0% {
+    opacity: 0;
+    transform: translateX(40px) translateY(10px) rotate(6deg) scale(0.94);
+  }
+  75% {
+    opacity: 1;
+    transform: translateX(-4px) translateY(-2px) rotate(-1.5deg) scale(1.015);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateY(0) rotate(0deg) scale(1);
+  }
+}
+
+.auth-card-login {
+  animation: auth-card-shuffle-login 550ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  transform-origin: bottom center;
+}
+
+.auth-card-register {
+  animation: auth-card-shuffle-register 550ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  transform-origin: bottom center;
+}
+
+@keyframes rainbow-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.animate-rainbow-flow {
+  animation: rainbow-flow var(--gradient-speed) linear infinite;
+}
+
+.rainbow-text-face,
+.rainbow-text-glow {
+  background-image: var(--user-gradient);
+}
+
+.rainbow-text-glow {
+  opacity: 0.88;
+  filter: blur(28px);
+}
+
+@keyframes dashboard-palette-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.dashboard-green-cycle,
+.dashboard-blue-cycle,
+.dashboard-yellow-cycle {
+  color: transparent;
+  background-position: 0% 50%;
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: dashboard-palette-flow var(--gradient-speed) linear infinite;
+}
+
+.dashboard-green-cycle {
+  background-image: linear-gradient(
+    90deg,
+    #39ff14,
+    #a3ff12,
+    #10f981,
+    #00e676,
+    #86efac,
+    #39ff14
+  );
+  filter:
+    drop-shadow(0 0 8px rgb(57 255 20 / 0.72))
+    drop-shadow(0 0 32px rgb(57 255 20 / 0.48));
+}
+
+.dashboard-blue-cycle {
+  background-image: linear-gradient(
+    90deg,
+    #22d3ee,
+    #38bdf8,
+    #3b82f6,
+    #2563eb,
+    #60a5fa,
+    #22d3ee
+  );
+  filter:
+    drop-shadow(0 0 8px rgb(56 189 248 / 0.72))
+    drop-shadow(0 0 32px rgb(37 99 235 / 0.48));
+}
+
+.dashboard-yellow-cycle {
+  background-image: linear-gradient(
+    90deg,
+    #faff00,
+    #fde047,
+    #facc15,
+    #f59e0b,
+    #fef08a,
+    #faff00
+  );
+  filter:
+    drop-shadow(0 0 8px rgb(250 204 21 / 0.75))
+    drop-shadow(0 0 32px rgb(245 158 11 / 0.5));
+}
+
+.gradients-disabled .rainbow-text-glow {
+  display: none;
+}
+
+.gradients-disabled .rainbow-text-face,
+.gradients-disabled .dashboard-green-cycle,
+.gradients-disabled .dashboard-blue-cycle,
+.gradients-disabled .dashboard-yellow-cycle {
+  color: currentColor;
+  background-image: none;
+  filter: none;
+  animation: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+.guest-static-colors .rainbow-text-glow {
+  display: none;
+}
+
+.guest-static-colors .rainbow-text-face,
+.guest-static-colors .dashboard-green-cycle,
+.guest-static-colors .dashboard-blue-cycle,
+.guest-static-colors .dashboard-yellow-cycle {
+  color: #000 !important;
+  background-image: none !important;
+  filter: none;
+  animation: none;
+  -webkit-text-fill-color: #000 !important;
+}
+
+.appearance-gradient-preview {
+  background-image: var(--user-gradient);
+  background-position: 0% 50%;
+  background-size: 200% auto;
+  background-clip: text;
+  color: transparent;
+  animation: rainbow-flow var(--gradient-speed) linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.settings-page .appearance-gradient-preview {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+
+.nav-tabs-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.nav-tabs-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.gas-station-scroll {
+  scrollbar-color: transparent transparent;
+  scrollbar-width: thin;
+}
+
+.gas-station-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 0;
+}
+
+.gas-station-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gas-station-scroll::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: transparent;
+}
+
+.gas-station-scroll.is-scrolling {
+  scrollbar-color: rgb(148 163 184 / 0.75) transparent;
+}
+
+.gas-station-scroll.is-scrolling::-webkit-scrollbar-thumb {
+  background: rgb(148 163 184 / 0.75);
+}
+
+.settings-page section {
+  border-color: #ff1f1f !important;
+  background-color: #0f172a !important;
+}
+
+@keyframes settings-neon-red-pulse {
+  0%,
+  100% {
+    border-color: #b91c1c;
+    box-shadow:
+      0 0 3px rgb(185 28 28 / 0.55),
+      0 0 8px rgb(185 28 28 / 0.22);
+  }
+  50% {
+    border-color: #ff3131;
+    box-shadow:
+      0 0 7px rgb(255 49 49 / 0.95),
+      0 0 20px rgb(255 0 0 / 0.58),
+      0 0 34px rgb(255 0 0 / 0.24);
+  }
+}
+
+.settings-page:not(.settings-page--guest) section {
+  animation: settings-neon-red-pulse 1.8s ease-in-out infinite;
+}
+
+.neon-borders-disabled .settings-page:not(.settings-page--guest) section {
+  border-color: #ff3131 !important;
+  box-shadow: none;
+  animation: none;
+}
+
+.settings-page :not(h1, h1 *, h2, h2 *, h3, h3 *, h4, h4 *, h5, h5 *, h6, h6 *) {
+  color: #fff !important;
+}
+
+.settings-page input::placeholder {
+  color: #fff !important;
+  opacity: 0.65;
+}
+
+.settings-page input:not([type='checkbox']) {
+  border-color: #475569 !important;
+  background-color: #111827 !important;
+}
+
+.settings-page:not(.settings-page--guest) .address-suggestions {
+  border-color: #475569 !important;
+  background-color: #111827 !important;
+}
+
+.settings-page:not(.settings-page--guest) .address-suggestions button:hover {
+  background-color: #1e293b !important;
+}
+
+.settings-page .settings-delivery-option--active {
+  background-color: #fff !important;
+  color: #000 !important;
+  box-shadow: inset 0 0 0 2px #fff;
+}
+
+.settings-page .settings-delivery-option--inactive {
+  background-color: #1e293b !important;
+  color: #cbd5e1 !important;
+}
+
+.settings-page .settings-delivery-option--inactive:hover {
+  background-color: #334155 !important;
+  color: #fff !important;
+}
+
+.settings-page--guest section {
+  background-color: #fff !important;
+}
+
+.settings-page--guest :not(h1, h1 *, h2, h2 *, h3, h3 *, h4, h4 *, h5, h5 *, h6, h6 *) {
+  color: #000 !important;
+}
+
+.settings-page--guest input:not([type='checkbox']),
+.settings-page--guest .guest-notifications-callout {
+  border-color: #9ca3af !important;
+  background-color: #fff !important;
+}
+
+.settings-page--guest input::placeholder {
+  color: #000 !important;
+  opacity: 0.55;
+}
+
+.settings-page--guest .settings-save-button {
+  border: 1px solid #000;
+  background-color: #fff !important;
+  color: #000 !important;
+  opacity: 1 !important;
+}
+
+.settings-page--guest section :is(h2, h3) [aria-hidden] {
+  display: none;
+}
+
+.settings-page--guest section :is(h2, h3) .animate-rainbow-flow {
+  color: #000 !important;
+  background-image: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-card-login,
+  .auth-card-register,
+  .animate-rainbow-flow,
+  .dashboard-green-cycle,
+  .dashboard-blue-cycle,
+  .dashboard-yellow-cycle,
+  .appearance-gradient-preview,
+  .settings-page:not(.settings-page--guest) section {
+    animation: none;
+  }
+
+  .dashboard-green-cycle,
+  .dashboard-blue-cycle,
+  .dashboard-yellow-cycle {
+    background-position: 50% 50%;
+  }
+
+  .settings-page:not(.settings-page--guest) section {
+    border-color: #ff3131 !important;
+    box-shadow: 0 0 8px rgb(255 49 49 / 0.55);
+  }
+}
+
+/* Weather card animated backgrounds */
+.weather-bg-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.weather-bg-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.weather-bg-clear {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 72% 22%,
+    #a8d8ff 0%,
+    #3d8fe0 22%,
+    #1a5fc4 50%,
+    #0a2f6e 80%,
+    #041a42 100%
+  );
+}
+
+.weather-sun-core {
+  position: absolute;
+  top: 14%;
+  right: 20%;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    0 0 40px 16px #fff7d6,
+    0 0 90px 40px rgb(255 247 214 / 0.6);
+  animation: weather-sun-pulse 3.5s ease-in-out infinite;
+}
+
+.weather-sun-ray {
+  position: absolute;
+  top: 14%;
+  right: 20%;
+  width: 46px;
+  height: 46px;
+  animation: weather-sun-spin 20s linear infinite;
+}
+
+.weather-sun-ray::before,
+.weather-sun-ray::after {
+  content: '';
+  position: absolute;
+  background: rgb(255 255 255 / 0.85);
+}
+
+.weather-sun-ray::before {
+  top: 50%;
+  left: -70px;
+  width: 186px;
+  height: 3px;
+  transform: translateY(-50%);
+}
+
+.weather-sun-ray::after {
+  left: 50%;
+  top: -70px;
+  width: 3px;
+  height: 186px;
+  transform: translateX(-50%);
+}
+
+.weather-sun-ray-diag {
+  transform: rotate(45deg);
+  animation: weather-sun-spin-diag 20s linear infinite;
+}
+
+.weather-bg-cloudy {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #6b7686 0%, #4a5361 40%, #2b323d 75%, #14181f 100%);
+}
+
+.weather-cloud {
+  position: absolute;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.22);
+  filter: blur(7px);
+  animation: weather-cloud-drift linear infinite;
+}
+
+.weather-cloud-a {
+  width: 240px;
+  height: 80px;
+  top: 8%;
+  left: -10%;
+  animation-duration: 20s;
+}
+
+.weather-cloud-b {
+  width: 190px;
+  height: 65px;
+  top: 34%;
+  left: -20%;
+  animation-duration: 26s;
+  animation-delay: -8s;
+}
+
+.weather-cloud-c {
+  width: 210px;
+  height: 70px;
+  top: 58%;
+  left: -15%;
+  animation-duration: 23s;
+  animation-delay: -14s;
+}
+
+.weather-cloud-d {
+  width: 170px;
+  height: 55px;
+  top: 80%;
+  left: -25%;
+  animation-duration: 29s;
+  animation-delay: -4s;
+}
+
+.weather-bg-rain {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #2a3648 0%, #16202e 40%, #0a1119 100%);
+}
+
+.weather-drop {
+  position: absolute;
+  top: -20px;
+  width: 2px;
+  height: 70px;
+  background: linear-gradient(
+    180deg,
+    rgb(180 210 255 / 0) 0%,
+    rgb(180 210 255 / 0.75) 100%
+  );
+  animation: weather-rain-fall linear infinite;
+}
+
+.weather-bg-thunder {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #2a2438 0%, #1a1428 45%, #0b0914 100%);
+}
+
+.weather-thunder-flash {
+  position: absolute;
+  inset: 0;
+  background: rgb(255 255 255 / 0.55);
+  opacity: 0;
+  animation: weather-thunder-flash 4.5s ease-in-out infinite;
+}
+
+.weather-bg-snow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #6b7c92 0%, #3f4c5e 45%, #1c2430 100%);
+}
+
+.weather-flake {
+  position: absolute;
+  top: -12px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.9);
+  box-shadow: 0 0 4px rgb(255 255 255 / 0.5);
+  animation: weather-snow-fall linear infinite;
+}
+
+.weather-bg-fog {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #8a919c 0%, #5c636e 50%, #2e333b 100%);
+}
+
+.weather-fog-layer {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(
+    ellipse at center,
+    rgb(255 255 255 / 0.35) 0%,
+    rgb(255 255 255 / 0.08) 55%,
+    transparent 75%
+  );
+  filter: blur(28px);
+  animation: weather-fog-breathe 6s ease-in-out infinite;
+}
+
+.weather-fog-a {
+  animation-delay: 0s;
+}
+
+.weather-fog-b {
+  animation-delay: -3s;
+  transform: scale(1.15);
+}
+
+@keyframes weather-sun-pulse {
+  0%,
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+}
+
+@keyframes weather-sun-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes weather-sun-spin-diag {
+  from {
+    transform: rotate(45deg);
+  }
+  to {
+    transform: rotate(405deg);
+  }
+}
+
+@keyframes weather-cloud-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(480px);
+  }
+}
+
+@keyframes weather-rain-fall {
+  to {
+    transform: translateY(420px);
+  }
+}
+
+@keyframes weather-thunder-flash {
+  0%,
+  88%,
+  100% {
+    opacity: 0;
+  }
+  90% {
+    opacity: 0.55;
+  }
+  92% {
+    opacity: 0.08;
+  }
+  94% {
+    opacity: 0.4;
+  }
+  96% {
+    opacity: 0;
+  }
+}
+
+@keyframes weather-snow-fall {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(var(--flake-drift, 18px), 420px, 0);
+  }
+}
+
+@keyframes weather-fog-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .weather-cloud,
+  .weather-sun-core,
+  .weather-sun-ray,
+  .weather-sun-ray-diag,
+  .weather-drop,
+  .weather-flake,
+  .weather-thunder-flash,
+  .weather-fog-layer {
+    animation: none;
+  }
+}
