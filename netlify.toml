@@ -19,6 +19,12 @@
   status = 200
 
 [[redirects]]
+  from = "/proxy/trafficcams/*"
+  to = "https://trafficcams.vancouver.ca/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

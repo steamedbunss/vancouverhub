@@ -31,9 +31,7 @@ const DIRECTION_ORDER: CameraDirection[] = [
 
 //This function returns the base URL, using Vite proxy in dev to avoid CORS
 function trafficCamsBase(): string {
-  return import.meta.env.DEV
-    ? '/proxy/trafficcams'
-    : 'https://trafficcams.vancouver.ca'
+  return '/proxy/trafficcams'
 }//trafficCamsBase
 
 //This function converts relative camera image hrefs to absolute URLs
