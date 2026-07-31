@@ -403,6 +403,33 @@ body {
   opacity: 1 !important;
 }
 
+/*Reserve the discard action's width, revealing it only while edits are pending.*/
+.settings-page .settings-discard-button {
+  color: #fca5a5 !important;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    color 150ms ease,
+    opacity 180ms ease;
+}
+
+.settings-page .settings-discard-button.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.settings-page .settings-discard-button.is-active:hover {
+  color: #fecaca !important;
+}
+
+.settings-page--guest .settings-discard-button {
+  color: #b91c1c !important;
+}
+
+.settings-page--guest .settings-discard-button.is-active:hover {
+  color: #7f1d1d !important;
+}
+
 .settings-page--guest section :is(h2, h3) [aria-hidden] {
   display: none;
 }

@@ -108,21 +108,25 @@ export function UpcomingEventsCalendar({ events, header }: { events: ApiEvent[];
               const count = eventCounts.get(key) ?? 0
               const isSelected = selectedDate === key
               const isPast = key < todayKey
+              const hasEvents = count > 0
+              const isDisabled = isPast || !hasEvents
               return (
                 <button
                   key={key}
                   type="button"
                   onClick={() => setSelectedDate(key)}
                   aria-pressed={isSelected}
-                  aria-disabled={isPast}
-                  disabled={isPast}
+                  aria-disabled={isDisabled}
+                  disabled={isDisabled}
                   className={`relative aspect-square rounded-md text-xs font-semibold transition ${
                     isPast
-                      ? 'cursor-not-allowed text-gray-300 opacity-55 dark:text-gray-700'
+                      ? 'cursor-not-allowed text-gray-400 dark:text-gray-500'
+                      : !hasEvents
+                        ? 'cursor-not-allowed text-gray-500 dark:text-gray-400'
                       : isSelected
                         ? 'bg-hub-navy text-white'
                         : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800'
-                  } ${count > 0 && !isSelected && !isPast ? 'ring-1 ring-hub-navy/30' : ''}`}
+                  } ${hasEvents && !isSelected && !isPast ? 'ring-1 ring-black/45 dark:ring-white/70' : ''}`}
                 >
                   {date.getDate()}
                 </button>

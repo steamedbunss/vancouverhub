@@ -67,18 +67,56 @@ export function SettingsPage() {
       }`}
     >
       {/*Page title*/}
-      <div className="mb-10">
+      <div className="mb-10 flex flex-wrap items-start justify-between gap-4">
         <h1 className="text-4xl font-black tracking-tight text-gray-900 md:text-5xl dark:text-white">
           <RainbowText>Settings</RainbowText>
         </h1>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-4">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={!hasChanges || isSaving}
+              className="settings-save-button rounded-lg bg-hub-navy px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-hub-navy-light disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </button>
+            <button
+              type="button"
+              onClick={handleDiscard}
+              disabled={!hasChanges || isSaving}
+              aria-hidden={!hasChanges}
+              tabIndex={hasChanges ? 0 : -1}
+              className={`settings-discard-button min-w-28 text-sm font-semibold ${
+                hasChanges ? 'is-active' : ''
+              }`}
+            >
+              Discard changes
+            </button>
+          </div>
+          {saveMessage && (
+            <p
+              className={`text-sm ${
+                saveMessage.startsWith('Could not')
+                  ? 'text-red-600 dark:text-red-400'
+                  : 'text-teal-700 dark:text-teal-300'
+              }`}
+            >
+              {saveMessage}
+            </p>
+          )}
+        </div>
       </div>
 
       {/*Three column grid of settings panels*/}
       <div className="grid gap-x-12 gap-y-10 xl:grid-cols-12">
         {/*Left column: location and alert preferences*/}
-        <div className="space-y-10 xl:col-span-4">
-          <LocationSettings />
-          <AlertPreferences />
+        <div className="xl:col-span-4">
+          <div className="space-y-10">
+            <LocationSettings />
+            <AlertPreferences />
+          </div>
+
         </div>
 
         {/*Middle column: navigation and 311 service request preferences*/}
@@ -97,43 +135,6 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/*Save and discard action buttons*/}
-      <div
-        className={`mt-8 flex items-center gap-4 ${
-          token ? 'xl:-mt-72' : ''
-        }`}
-      >
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={!hasChanges || isSaving}
-          className="settings-save-button rounded-lg bg-hub-navy px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-hub-navy-light disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isSaving ? 'Saving...' : 'Save Changes'}
-        </button>
-        {hasChanges && (
-          <button
-            type="button"
-            onClick={handleDiscard}
-            disabled={isSaving}
-            className="text-sm text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            Discard changes
-          </button>
-        )}
-      </div>
-      {/*Success or error message after save attempt*/}
-      {saveMessage && (
-        <p
-          className={`mt-3 text-sm ${
-            saveMessage.startsWith('Could not')
-              ? 'text-red-600 dark:text-red-400'
-              : 'text-teal-700 dark:text-teal-300'
-          }`}
-        >
-          {saveMessage}
-        </p>
-      )}
     </div>
   )
 }//SettingsPage
