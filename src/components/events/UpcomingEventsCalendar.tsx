@@ -17,6 +17,9 @@ function startOfMonth(date: Date) {
 }//startOfMonth
 
 export function UpcomingEventsCalendar({ events, header }: { events: ApiEvent[]; header: ReactNode }) {
+  //todayKey is based on local midnight so every earlier calendar date is disabled
+  const todayKey = dateKey(new Date())
+
   //declaring state for the currently selected date key
   const [selectedDate, setSelectedDate] = useState(() => dateKey(new Date()))
 
@@ -37,11 +40,18 @@ export function UpcomingEventsCalendar({ events, header }: { events: ApiEvent[];
   //It also moves displayMonth to the month containing that first event
   useEffect(() => {
     if (events.length === 0 || eventCounts.has(selectedDate)) return
-    const firstEvent = [...events].sort((first, second) => new Date(first.dateStart).getTime() - new Date(second.dateStart).getTime())[0]
+    const firstEvent = [...events]
+      .filter((event) => dateKey(new Date(event.dateStart)) >= todayKey)
+      .sort((first, second) => new Date(first.dateStart).getTime() - new Date(second.dateStart).getTime())[0]
+    if (!firstEvent) {
+      setSelectedDate(todayKey)
+      setDisplayMonth(startOfMonth(new Date()))
+      return
+    }
     const firstDate = new Date(firstEvent.dateStart)
     setSelectedDate(dateKey(firstDate))
     setDisplayMonth(startOfMonth(firstDate))
-  }, [eventCounts, events, selectedDate])
+  }, [eventCounts, events, selectedDate, todayKey])
 
   //firstWeekday is the column index where day 1 falls in the calendar grid
   const firstWeekday = displayMonth.getDay()
@@ -97,13 +107,22 @@ export function UpcomingEventsCalendar({ events, header }: { events: ApiEvent[];
               const key = dateKey(date)
               const count = eventCounts.get(key) ?? 0
               const isSelected = selectedDate === key
+              const isPast = key < todayKey
               return (
                 <button
                   key={key}
                   type="button"
                   onClick={() => setSelectedDate(key)}
                   aria-pressed={isSelected}
-                  className={`relative aspect-square rounded-md text-xs font-semibold transition ${isSelected ? 'bg-hub-navy text-white' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800'} ${count > 0 && !isSelected ? 'ring-1 ring-hub-navy/30' : ''}`}
+                  aria-disabled={isPast}
+                  disabled={isPast}
+                  className={`relative aspect-square rounded-md text-xs font-semibold transition ${
+                    isPast
+                      ? 'cursor-not-allowed text-gray-300 opacity-55 dark:text-gray-700'
+                      : isSelected
+                        ? 'bg-hub-navy text-white'
+                        : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800'
+                  } ${count > 0 && !isSelected && !isPast ? 'ring-1 ring-hub-navy/30' : ''}`}
                 >
                   {date.getDate()}
                 </button>

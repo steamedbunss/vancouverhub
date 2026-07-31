@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { AlertsProvider } from '../../context/AlertsContext'
 import { LocationProvider } from '../../context/LocationContext'
@@ -9,6 +10,35 @@ export function Layout() {
   const { pathname } = useLocation()
   //isDashboard is true on the dashboard route which uses a fixed viewport height
   const isDashboard = pathname === '/dashboard'
+
+  //Show each page or nested scrollbar only while that surface is actively scrolling.
+  useEffect(() => {
+    const timers = new Map<Element, number>()
+
+    function handleScroll(event: Event) {
+      const surface = event.target instanceof Element
+        ? event.target
+        : document.documentElement
+
+      surface.classList.add('is-scrolling')
+      const currentTimer = timers.get(surface)
+      if (currentTimer !== undefined) window.clearTimeout(currentTimer)
+      timers.set(
+        surface,
+        window.setTimeout(() => {
+          surface.classList.remove('is-scrolling')
+          timers.delete(surface)
+        }, 700),
+      )
+    }
+
+    document.addEventListener('scroll', handleScroll, { capture: true, passive: true })
+    return () => {
+      document.removeEventListener('scroll', handleScroll, true)
+      timers.forEach((timer) => window.clearTimeout(timer))
+      timers.forEach((_, surface) => surface.classList.remove('is-scrolling'))
+    }
+  }, [])
 
   return (
     <div

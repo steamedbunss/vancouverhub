@@ -1,3 +1,8 @@
+//Cascade Gateway border-wait client for the Vancouver Hub traffic map
+//The browser calls the same-origin /api/border-waits endpoint only.
+//Netlify Function border-waits.ts holds the server-only CASCADE_GATEWAY_API_KEY.
+
+//declaring border lane category labels returned by the Netlify Function
 export type BorderLaneCategory =
   | 'Passenger'
   | 'NEXUS'
@@ -5,6 +10,7 @@ export type BorderLaneCategory =
   | 'Truck'
   | 'Other'
 
+//declaring normalized border lane wait time for a single crossing lane
 export interface BorderLaneWait {
   crossing: string
   category: BorderLaneCategory
@@ -13,17 +19,20 @@ export interface BorderLaneWait {
   updatedAt: string | null
 }
 
+//This function checks whether a value is null or a finite number
 function isNullableNumber(value: unknown): value is number | null {
   return (
     value === null ||
     (typeof value === 'number' && Number.isFinite(value))
   )
-}
+}//isNullableNumber
 
+//This function checks whether a value is null or a string
 function isNullableString(value: unknown): value is string | null {
   return value === null || typeof value === 'string'
-}
+}//isNullableString
 
+//This function checks whether a value is a valid BorderLaneCategory
 function isBorderLaneCategory(
   value: unknown,
 ): value is BorderLaneCategory {
@@ -34,8 +43,9 @@ function isBorderLaneCategory(
     value === 'Truck' ||
     value === 'Other'
   )
-}
+}//isBorderLaneCategory
 
+//This function validates a single border-wait record from the API response
 function isBorderLaneWait(value: unknown): value is BorderLaneWait {
   if (!value || typeof value !== 'object') {
     return false
@@ -50,8 +60,9 @@ function isBorderLaneWait(value: unknown): value is BorderLaneWait {
     isNullableNumber(record.waitMinutes) &&
     isNullableString(record.updatedAt)
   )
-}
+}//isBorderLaneWait
 
+//This function fetches current border wait times from the Netlify Function proxy
 export async function getCascadeGatewayBorderWaits(): Promise<
   BorderLaneWait[]
 > {
@@ -75,4 +86,4 @@ export async function getCascadeGatewayBorderWaits(): Promise<
   }
 
   return data
-}
+}//getCascadeGatewayBorderWaits

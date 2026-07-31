@@ -1,7 +1,6 @@
 import type { DriveBCEvent } from '../../types/drivebc'
 import { resolveIncidentHeadline } from '../../utils/incidentHeadline'
 import {
-  themedCard,
   themedCardMuted,
 } from '../ui/themedCard'
 
@@ -66,7 +65,7 @@ export function EventCard({
     MINOR: 'bg-slate-500 text-white border-slate-300 shadow-[0_0_6px_rgba(148,163,184,0.4)]',
     UNKNOWN: 'bg-slate-600 text-white border-slate-400',
   }
-  //severitySymbol shows a diamond for MAJOR and a triangle for MINOR delays
+  //severitySymbol shows a diamond for MAJOR and a triangle for MINOR severity
   const severitySymbol =
     event.severity === 'MAJOR' ? '◇' : event.severity === 'MINOR' ? '▽' : null
   //isClosure is true when the event has at least one closed road name
@@ -74,57 +73,66 @@ export function EventCard({
   //title is a human-readable headline derived from the event data
   const title = resolveIncidentHeadline(event)
 
+  const summaryHeaderSurface =
+    'border border-gray-300 bg-gray-100 text-gray-900 dark:border-white dark:bg-gray-950 dark:text-white'
+  const collapsedHeaderShadow =
+    'shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]'
+  const expandedHeaderShadow =
+    'shadow-[inset_0_1px_0_rgba(255,255,255,0.8),inset_0_-8px_12px_-6px_rgba(255,255,255,0.75)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.14),inset_0_-8px_12px_-6px_rgba(255,255,255,0.28)]'
+  const expandedBodySurface =
+    'border border-gray-300 bg-white text-gray-900 shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-none'
+  const expandedCardOuterGlow =
+    'rounded-xl shadow-[0_0_16px_rgba(15,23,42,0.08)] dark:shadow-[0_0_18px_rgba(255,255,255,0.35)]'
+
   return (
-    <div className="flex w-full flex-col items-center gap-3">
-      {/*Compact card showing severity badge, title, area, and last updated time*/}
-      <article className={`relative flex w-52 shrink-0 flex-col gap-2 rounded-xl p-3 ${themedCard}`}>
-        {/*Top row with severity/closure badges and expand/collapse button*/}
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-            {/*Closure badge appears when the event closes one or more roads*/}
-            {isClosure && (
-              <span className="inline-flex items-center gap-1 rounded border border-red-400 bg-red-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-[0_0_8px_rgba(239,68,68,0.55)]">
-                <span aria-hidden="true">⛔</span> Closure
+    <div
+      className={`col-span-3 grid grid-cols-subgrid gap-x-3 ${expanded ? expandedCardOuterGlow : ''}`}
+    >
+      <article
+        className={`col-span-3 grid grid-cols-subgrid items-center gap-x-3 px-3 py-2.5 ${summaryHeaderSurface} ${expanded ? expandedHeaderShadow : collapsedHeaderShadow} ${expanded ? 'rounded-t-xl rounded-b-none border-b-0' : 'rounded-xl'}`}
+      >
+        {/*Left cluster: badges and headline*/}
+        <div className="flex min-w-0 items-center gap-2">
+          {isClosure && (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded border border-red-400 bg-red-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-[0_0_8px_rgba(239,68,68,0.55)]">
+              <span aria-hidden="true">⛔</span> Closure
+            </span>
+          )}
+          <span
+            className={`inline-flex shrink-0 items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${severityColors[event.severity]}`}
+          >
+            {severitySymbol && (
+              <span aria-hidden="true" className="text-sm leading-none">
+                {severitySymbol}
               </span>
             )}
-            {/*Severity badge with optional symbol and severity label*/}
-            <span
-              className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${severityColors[event.severity]}`}
-            >
-              {severitySymbol && (
-                <span aria-hidden="true" className="text-sm leading-none">
-                  {severitySymbol}
-                </span>
-              )}
-              {event.severity}
-            </span>
-          </div>
-          {/*Toggle button expands or collapses the full description panel*/}
-          <button
-            type="button"
-            onClick={onToggleExpanded}
-            aria-expanded={expanded}
-            aria-label={expanded ? 'Hide description' : 'Show description'}
-            className="inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-md border border-black text-sm font-bold leading-none transition hover:bg-black hover:text-white dark:border-white dark:hover:bg-white dark:hover:text-black"
-          >
-            {expanded ? '−' : '+'}
-          </button>
+            {event.severity}
+          </span>
+          <p className="min-w-0 truncate text-sm font-bold leading-tight">{title}</p>
         </div>
 
-        {/*Event headline clamped to three lines*/}
-        <p className="line-clamp-3 text-base font-bold leading-tight">{title}</p>
+        {/*Expand control; column width is shared across all cards via subgrid*/}
+        <button
+          type="button"
+          onClick={onToggleExpanded}
+          aria-expanded={expanded}
+          aria-label={expanded ? 'Hide description' : 'Show description'}
+          className="inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-md border border-black text-sm font-bold leading-none transition hover:bg-black hover:text-white dark:border-white dark:hover:bg-white dark:hover:text-black"
+        >
+          {expanded ? '−' : '+'}
+        </button>
 
-        {/*Area name and formatted last-updated timestamp*/}
-        <div className={`space-y-0.5 text-[11px] ${themedCardMuted}`}>
-          <p className="line-clamp-2 font-medium text-inherit opacity-100">{event.areaName}</p>
-          <p>Updated {formatUpdatedAt(event.updated)}</p>
+        {/*Meta column sizes to the widest district name or updated time in the list*/}
+        <div className={`text-right text-[11px] leading-tight ${themedCardMuted}`}>
+          <p className="whitespace-nowrap font-medium text-inherit opacity-100">{event.areaName}</p>
+          <p className="whitespace-nowrap">Updated {formatUpdatedAt(event.updated)}</p>
         </div>
       </article>
 
-      {/*Expanded description panel with keyword-highlighted incident text*/}
+      {/*Expanded description panel sits below the summary row, sharing its border*/}
       {expanded && (
         <div
-          className={`w-full rounded-xl p-4 ${themedCard}`}
+          className={`col-span-3 rounded-b-xl rounded-t-none border-t-0 px-3 pb-3 pt-2 ${expandedBodySurface}`}
           role="region"
           aria-label={`${title} description`}
         >

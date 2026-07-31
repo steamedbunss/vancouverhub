@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../../context/AuthContext'
-import { getCheapestGasStations } from '../../../lib/api/gas'
+import { getNearbyGasStations } from '../../../lib/api/gas'
 import { formatUpdateDateTime } from '../../../lib/formatters/dateTime'
 import type { ApiFuelType, ApiGasStation } from '../../../types/backend'
 
@@ -12,14 +12,15 @@ const FUEL_OPTIONS: Array<{ key: ApiFuelType; label: string }> = [
   { key: 'PREMIUM', label: 'Premium' },
 ]
 
-//constant for how many stations are visible in the scroll viewport at once
+//VISIBLE_STATION_COUNT is how many station rows fit in the scroll viewport height
 const VISIBLE_STATION_COUNT = 3
 
-//INITIAL_STATION_LIMIT is the first batch size fetched from the API
+//INITIAL_STATION_LIMIT resets scroll pagination state when fuel type or token changes
 const INITIAL_STATION_LIMIT = VISIBLE_STATION_COUNT * 2
 
-//STATION_BATCH_SIZE is how many additional stations to load on scroll
+//STATION_BATCH_SIZE is the scroll-pagination increment (fetch currently loads all stations within radius)
 const STATION_BATCH_SIZE = 3
+const DASHBOARD_GAS_RADIUS_KM = 3
 
 export function GasSection({ featured = false, compact = false }: { featured?: boolean; compact?: boolean }) {
   //token and user from auth context; gas prices require a signed-in user with a location
@@ -40,10 +41,10 @@ export function GasSection({ featured = false, compact = false }: { featured?: b
   //declaring state to track whether stations are being loaded
   const [loading, setLoading] = useState(true)
 
-  //declaring state for how many stations to request from the API
+  //declaring state for scroll pagination limit (fetch currently requests up to 100 stations)
   const [stationLimit, setStationLimit] = useState(INITIAL_STATION_LIMIT)
 
-  //declaring state for whether more stations can be loaded on scroll
+  //declaring state for whether scroll can load more (set false after a successful fetch)
   const [hasMore, setHasMore] = useState(true)
 
   //declaring state for whether the user is actively scrolling the station list
@@ -62,13 +63,13 @@ export function GasSection({ featured = false, compact = false }: { featured?: b
     }
   }, [hasChosenFuelType, user?.preferredFuelType])
 
-  //This useEffect resets pagination when fuel type or auth token changes
+  //This useEffect resets scroll pagination state when fuel type or auth token changes
   useEffect(() => {
     setStationLimit(INITIAL_STATION_LIMIT)
     setHasMore(true)
   }, [fuelType, token])
 
-  //This useEffect loads gas stations whenever token, fuelType, or stationLimit change
+  //This useEffect loads nearby gas stations whenever token or fuelType change
   //The cancelled flag prevents state updates if the component unmounts mid-fetch
   useEffect(() => {
     const currentToken = token
@@ -89,11 +90,19 @@ export function GasSection({ featured = false, compact = false }: { featured?: b
       setError(null)
 
       try {
-        const data = await getCheapestGasStations(currentToken, fuelType, stationLimit)
+        const data = await getNearbyGasStations(
+          currentToken,
+          fuelType,
+          100,
+          DASHBOARD_GAS_RADIUS_KM,
+        )
         if (!cancelled) {
-          setStations(data)
+          const nearbyStations = data.filter(
+            (station) => station.distanceKm <= DASHBOARD_GAS_RADIUS_KM,
+          ).sort((first, second) => first.price - second.price)
+          setStations(nearbyStations)
           setStationsFuelType(fuelType)
-          setHasMore(data.length >= stationLimit)
+          setHasMore(false)
         }
       } catch (err) {
         if (!cancelled) {
@@ -124,8 +133,8 @@ export function GasSection({ featured = false, compact = false }: { featured?: b
     setFuelType(nextFuelType)
   }//selectFuelType
 
-  //handleStationScroll detects near-bottom scroll and loads the next batch of stations
-  //It also toggles isScrolling while the user is actively scrolling
+  //handleStationScroll toggles isScrolling and bumps stationLimit near the bottom
+  //Fetch uses a fixed limit today, so this only updates pagination state for now
   function handleStationScroll(event: React.UIEvent<HTMLDivElement>) {
     const viewport = event.currentTarget
     setIsScrolling(true)
@@ -143,7 +152,7 @@ export function GasSection({ featured = false, compact = false }: { featured?: b
   //isFuelSwitching is true while loading after the user changed fuel type
   const isFuelSwitching = loading && stationsFuelType !== null && stationsFuelType !== fuelType
 
-  //isPaging is true while loading additional stations for the same fuel type
+  //isPaging is true while refetching stations for the current fuel type
   const isPaging = loading && stations.length > 0 && stationsFuelType === fuelType
 
   return (
@@ -204,7 +213,7 @@ export function GasSection({ featured = false, compact = false }: { featured?: b
               <Link to="/login" className="font-semibold text-hub-navy underline underline-offset-2 dark:text-white">Sign in</Link> to see the three cheapest gas prices near your saved location.
             </p>
           ) : stations.length > 0 ? (
-            //Scrollable station list with infinite scroll pagination
+            //Scrollable station list; scroll handler tracks idle state and pagination state
             <div
               onScroll={handleStationScroll}
               role="region"
@@ -239,7 +248,7 @@ export function GasSection({ featured = false, compact = false }: { featured?: b
           ) : (
             //Empty state when no stations exist for the selected fuel type nearby
             <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-              No {fuelType.toLowerCase()} gas prices are available within 25 km of your location yet.
+              No {fuelType.toLowerCase()} gas prices are available within 3 km of your location yet.
             </p>
           )
         )}

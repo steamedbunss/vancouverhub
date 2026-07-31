@@ -1,5 +1,10 @@
+//Netlify Function that proxies Cascade Gateway border-wait data
+//Reads CASCADE_GATEWAY_API_KEY from the server environment only.
+//Exposes GET /api/border-waits as a typed BorderLaneWait[] JSON array.
+
 import type { Config } from '@netlify/functions'
 
+//declaring border lane category labels for US-Canada crossing wait times
 type BorderLaneCategory =
   | 'Passenger'
   | 'NEXUS'
@@ -7,6 +12,7 @@ type BorderLaneCategory =
   | 'Truck'
   | 'Other'
 
+//declaring a verified Cascade lane entry in the fixed allowlist
 interface SupportedLane {
   id: number
   crossing: string
@@ -14,6 +20,7 @@ interface SupportedLane {
   direction: string
 }
 
+//declaring normalized border lane wait time returned to the browser
 interface BorderLaneWait {
   crossing: string
   category: BorderLaneCategory
@@ -22,11 +29,15 @@ interface BorderLaneWait {
   updatedAt: string | null
 }
 
+//declaring generic record type for parsing varied Cascade Gateway JSON shapes
 type RawRecord = Record<string, unknown>
 
+//declaring Cascade Gateway API base URL and upstream request timeout
 const CASCADE_BASE_URL = 'https://www.cascadegatewaydata.com'
 const UPSTREAM_TIMEOUT_MS = 5_000
 
+//declaring verified Cascade lane IDs for Peace Arch, Pacific Highway,
+//Lynden/Aldergrove, and Sumas/Huntingdon crossings
 const SUPPORTED_LANES: SupportedLane[] = [
   {
     id: 3,
@@ -168,6 +179,7 @@ const SUPPORTED_LANES: SupportedLane[] = [
   },
 ]
 
+//declaring error thrown when a Cascade Gateway request times out
 class UpstreamTimeoutError extends Error {
   constructor() {
     super('Cascade Gateway request timed out.')
@@ -175,6 +187,7 @@ class UpstreamTimeoutError extends Error {
   }
 }
 
+//declaring error thrown when Cascade Gateway returns a non-success status
 class UpstreamResponseError extends Error {
   constructor(public readonly status: number) {
     super(`Cascade Gateway returned status ${status}.`)
@@ -182,6 +195,7 @@ class UpstreamResponseError extends Error {
   }
 }
 
+//This function builds a Cascade Gateway API URL with format and key query params
 function cascadeUrl(path: string, apiKey: string) {
   const separator = path.includes('?') ? '&' : '?'
 
@@ -189,8 +203,9 @@ function cascadeUrl(path: string, apiKey: string) {
     `${CASCADE_BASE_URL}${path}${separator}` +
     `format=json&key=${encodeURIComponent(apiKey)}`
   )
-}
+}//cascadeUrl
 
+//This function fetches JSON from Cascade Gateway with an upstream timeout
 async function fetchCascadeJson<T>(
   path: string,
   apiKey: string,
@@ -225,12 +240,14 @@ async function fetchCascadeJson<T>(
   } finally {
     clearTimeout(timeout)
   }
-}
+}//fetchCascadeJson
 
+//This function normalizes a JSON field name for flexible Cascade record matching
 function normalizedKey(value: string) {
   return value.toLowerCase().replace(/[^a-z]/g, '')
-}
+}//normalizedKey
 
+//This function finds the first matching value in a record by normalized key names
 function firstValue(record: RawRecord, possibleKeys: string[]) {
   const normalizedPossibleKeys = possibleKeys.map(normalizedKey)
 
@@ -239,8 +256,9 @@ function firstValue(record: RawRecord, possibleKeys: string[]) {
   )
 
   return match?.[1]
-}
+}//firstValue
 
+//This function extracts a finite number from direct values or numeric strings
 function finiteNumber(value: unknown): number | null {
   if (typeof value === 'number' && Number.isFinite(value)) {
     return value
@@ -252,8 +270,9 @@ function finiteNumber(value: unknown): number | null {
   }
 
   return null
-}
+}//finiteNumber
 
+//This function finds the latest numeric value in a nested or array field
 function latestNumber(value: unknown): number | null {
   const direct = finiteNumber(value)
 
@@ -274,8 +293,9 @@ function latestNumber(value: unknown): number | null {
   }
 
   return null
-}
+}//latestNumber
 
+//This function finds the latest timestamp in a nested or array field
 function latestTime(value: unknown): string | null {
   const values = Array.isArray(value) ? value : [value]
   const latest = values.at(-1)
@@ -296,8 +316,9 @@ function latestTime(value: unknown): string | null {
   }
 
   return null
-}
+}//latestTime
 
+//This function parses wait minutes and updatedAt from varied CurrentDelay response shapes
 function parseCurrentDelay(raw: unknown) {
   const directNumber = finiteNumber(raw)
 
@@ -345,8 +366,9 @@ function parseCurrentDelay(raw: unknown) {
     waitMinutes,
     updatedAt,
   }
-}
+}//parseCurrentDelay
 
+//This function handles GET /api/border-waits and returns allowlisted lane delays
 export default async function handler(request: Request) {
   if (request.method !== 'GET') {
     return Response.json(
@@ -369,6 +391,7 @@ export default async function handler(request: Request) {
     )
   }
 
+  //Promise.allSettled maps each verified lane to a parallel CurrentDelay fetch
   const settledResults = await Promise.allSettled(
     SUPPORTED_LANES.map(async (lane): Promise<BorderLaneWait> => {
       const currentDelay = await fetchCascadeJson<unknown>(
@@ -432,8 +455,9 @@ export default async function handler(request: Request) {
         failures.length > 0 ? 'true' : 'false',
     },
   })
-}
+}//handler
 
+//declaring Netlify Function route configuration for GET requests only
 export const config: Config = {
   method: 'GET',
 }

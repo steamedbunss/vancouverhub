@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { fetchDriveBCEvents } from "../lib/api/open511"
 import type { DriveBCEvent, SortOption } from "../types/drivebc"
 import { useDriveBCFilters } from "../hooks/useDriveBCFilters"
@@ -10,11 +10,19 @@ import { DriveBCMap } from "./drivebc/DriveBCMap"
 //declaring the view mode type as either list or map
 type ViewMode = "list" | "map"
 
-//constant for how many event cards to show before the user clicks Show more
-const LIST_PAGE_SIZE = 4
+//initial number of event cards shown in list view before the user clicks Show more
+const LIST_INITIAL_COUNT = 9
+
+//number of additional event cards revealed each time the user clicks Show more
+const LIST_SHOW_MORE_COUNT = 10
 
 //shared minimum height class so list and map views do not jump when toggling
 const CONTENT_MIN_HEIGHT_CLASS = "min-h-[560px]"
+
+//This function builds a stable React key and expansion id for each rendered card row
+function getEventCardKey(event: DriveBCEvent, index: number) {
+  return `${String(event.id)}-${index}`
+}
 
 export function DriveBCSection() {
   //declaring state to hold all road events fetched from the Open511 API
@@ -30,11 +38,12 @@ export function DriveBCSection() {
   const [showNexusWaits, setShowNexusWaits] = useState(false)
 
   //declaring state for how many filtered events are visible in list view
-  const [visibleListCount, setVisibleListCount] = useState(LIST_PAGE_SIZE)
+  const [visibleListCount, setVisibleListCount] = useState(LIST_INITIAL_COUNT)
 
-  //declaring state as a Set to track which event cards are expanded
-  //eg. if an event id is in the Set, that card shows its full description
-  const [expandedEventIds, setExpandedEventIds] = useState<Set<string>>(() => new Set())
+  //declaring state as a list of expanded card keys for reliable React updates at scale
+  const [expandedCardKeys, setExpandedCardKeys] = useState<string[]>([])
+
+  const expandedCardKeySet = useMemo(() => new Set(expandedCardKeys), [expandedCardKeys])
 
   //This useEffect runs once when the component mounts
   //fetchDriveBCEvents is called to load road events from the API
@@ -64,33 +73,30 @@ export function DriveBCSection() {
     clearSelections,
   } = useDriveBCFilters(events, viewMode === "list")
 
-  //This useEffect resets visibleListCount back to LIST_PAGE_SIZE
+  //This useEffect resets visibleListCount back to LIST_INITIAL_COUNT
   //whenever the user changes filters or switches between list and map
   useEffect(() => {
-    setVisibleListCount(LIST_PAGE_SIZE)
+    setVisibleListCount(LIST_INITIAL_COUNT)
   }, [filters, viewMode])
 
   //This useEffect clears all expanded cards when filters or view mode change
   //so descriptions do not stay open after the event list changes
   useEffect(() => {
-    setExpandedEventIds(new Set())
+    setExpandedCardKeys([])
   }, [filters, viewMode])
 
-  //toggleEventExpanded adds or removes an event id from expandedEventIds
-  //If the id is already in the Set, it is removed to collapse the card
-  //If the id is not in the Set, it is added to expand the card
-  function toggleEventExpanded(eventId: string) {
-    setExpandedEventIds((current) => {
-      const next = new Set(current)
-      if (next.has(eventId)) next.delete(eventId)
-      else next.add(eventId)
-      return next
-    })
+  //toggleEventExpanded adds or removes a card key from expandedCardKeys
+  function toggleEventExpanded(cardKey: string) {
+    setExpandedCardKeys((current) =>
+      current.includes(cardKey)
+        ? current.filter((key) => key !== cardKey)
+        : [...current, cardKey],
+    )
   }//toggleEventExpanded
 
-  //collapseAllEvents clears the Set so every event card returns to collapsed
+  //collapseAllEvents clears every expanded card key, regardless of list length
   function collapseAllEvents() {
-    setExpandedEventIds(new Set())
+    setExpandedCardKeys([])
   }//collapseAllEvents
 
   //hasMapSelection is true when the user has selected at least one map filter
@@ -105,7 +111,7 @@ export function DriveBCSection() {
   const shouldShowMapEvents = viewMode === "list" || hasMapSelection
 
   //visibleListEvents holds only the first visibleListCount items from filteredEvents
-  //eg. if visibleListCount is 4, only the first 4 filtered events are shown
+  //eg. if visibleListCount is 9, only the first 9 filtered events are shown
   const visibleListEvents = filteredEvents.slice(0, visibleListCount)
 
   //displayedEventCount shows how many events appear in the header count
@@ -131,12 +137,22 @@ export function DriveBCSection() {
     <div className="p-4">
       <div className="mx-auto w-full max-w-[51.5rem] space-y-3">
         {/*Header row with event count, sort dropdown, and list/map toggle*/}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2 dark:border-gray-700">
+        <div className="relative z-20 flex flex-wrap items-center justify-between gap-2 border-b pb-2 dark:border-gray-700">
           <div className="text-xs text-slate-500 dark:text-slate-300">
             Showing <strong className="dark:text-white">{displayedEventCount}</strong> of {events.length} active events
           </div>
 
-          <div className="flex items-center gap-2 text-xs">
+          <div className="relative z-20 flex items-center gap-2 text-xs">
+            {/*Collapse all sits left of sort controls; hidden in map view*/}
+            <button
+              type="button"
+              onClick={collapseAllEvents}
+              aria-hidden={!isList}
+              tabIndex={isList ? 0 : -1}
+              className={`rounded-md border border-black bg-white px-2.5 py-1 text-[11px] font-bold whitespace-nowrap text-black transition hover:bg-gray-100 dark:border-white dark:bg-gray-950 dark:text-white dark:hover:bg-gray-900 ${isList ? "" : "invisible"}`}
+            >
+              Collapse all
+            </button>
             {/*Sort by label and dropdown are hidden in map view but keep their space*/}
             <span className={`text-slate-500 dark:text-slate-300 ${isList ? "" : "invisible"}`}>Sort by:</span>
             <select
@@ -201,7 +217,7 @@ export function DriveBCSection() {
             className={`w-full shrink-0 md:w-56 ${CONTENT_MIN_HEIGHT_CLASS} overflow-y-auto`}
           />
 
-          <div className={`w-full max-w-xl shrink-0 md:w-[36rem] ${CONTENT_MIN_HEIGHT_CLASS}`}>
+          <div className={`min-w-0 flex-1 ${CONTENT_MIN_HEIGHT_CLASS}`}>
             {isList ? (
               //List view renders event cards with pagination
               <div className="space-y-3">
@@ -212,32 +228,26 @@ export function DriveBCSection() {
                   </div>
                 ) : (
                   <>
-                    <div className="relative space-y-3">
-                      {/*Collapse all button sits at the top right, aligned with the first card*/}
-                      <button
-                        type="button"
-                        onClick={collapseAllEvents}
-                        disabled={expandedEventIds.size === 0}
-                        className="absolute top-0 right-0 z-10 rounded-md border border-black bg-white px-2.5 py-1 text-[11px] font-bold whitespace-nowrap text-black transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white dark:bg-gray-950 dark:text-white dark:hover:bg-gray-900"
-                      >
-                        Collapse all
-                      </button>
+                    <div className="relative z-0 grid grid-cols-[minmax(0,1fr)_22px_max-content] gap-x-3 gap-y-3">
                       {/*This map iterates through each visible filtered event and renders an EventCard*/}
-                      {visibleListEvents.map((event) => (
-                        <EventCard
-                          key={event.id}
-                          event={event}
-                          expanded={expandedEventIds.has(event.id)}
-                          onToggleExpanded={() => toggleEventExpanded(event.id)}
-                        />
-                      ))}
+                      {visibleListEvents.map((event, index) => {
+                        const cardKey = getEventCardKey(event, index)
+                        return (
+                          <EventCard
+                            key={cardKey}
+                            event={event}
+                            expanded={expandedCardKeySet.has(cardKey)}
+                            onToggleExpanded={() => toggleEventExpanded(cardKey)}
+                          />
+                        )
+                      })}
                     </div>
                     {/*Show more button appears when additional filtered events exist beyond visibleListCount*/}
                     {visibleListCount < filteredEvents.length && (
                       <div className="pt-3 text-center">
                         <button
                           type="button"
-                          onClick={() => setVisibleListCount((count) => count + LIST_PAGE_SIZE)}
+                          onClick={() => setVisibleListCount((count) => count + LIST_SHOW_MORE_COUNT)}
                           className="rounded-lg border border-black bg-white px-5 py-2.5 text-sm font-bold text-black transition hover:bg-gray-100"
                         >
                           Show more
@@ -248,7 +258,6 @@ export function DriveBCSection() {
                 )}
               </div>
             ) : (
-              //Map view renders the DriveBC map; events are passed only when filters are selected
               <DriveBCMap
                 events={hasMapSelection ? filteredEvents : []}
                 showNexusWaits={showNexusWaits}

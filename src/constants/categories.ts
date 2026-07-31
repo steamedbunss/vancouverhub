@@ -83,8 +83,8 @@ export const CATEGORIES: Record<CategoryId, CategoryDefinition> = {
   },
   'safety-311': {
     id: 'safety-311',
-    label: '311',
-    shortLabel: '311',
+    label: 'Neighbourhood',
+    shortLabel: 'Neighbourhood',
     path: '/safety-311',
     description: 'Recent 311 service requests near your location.',
   },

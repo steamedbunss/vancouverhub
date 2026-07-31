@@ -1,6 +1,6 @@
 //shared Tailwind class strings for Environment and event content cards
 export const themedCard =
-  'border border-black bg-white text-gray-900 shadow-sm dark:border-white dark:bg-gray-950 dark:text-white dark:shadow-[0_0_18px_rgba(255,255,255,0.45)]'
+  'border border-gray-300 bg-gray-100 text-gray-900 shadow-none dark:border-white dark:bg-gray-950 dark:text-white dark:shadow-none'
 
 //themedCardMuted is the secondary text color for card body copy
 export const themedCardMuted = 'text-gray-500 dark:text-gray-400'

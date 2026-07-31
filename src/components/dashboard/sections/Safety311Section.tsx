@@ -118,8 +118,8 @@ export function Safety311Section() {
         >
           <RainbowText>See all →</RainbowText>
         </Link>
-        <h2 className="dashboard-yellow-cycle mt-3 text-7xl font-black tracking-tighter md:text-8xl md:leading-[0.9]">
-          311 Reports
+        <h2 className="dashboard-red-cycle mt-3 pb-2 text-7xl leading-none font-black tracking-tighter md:text-8xl md:leading-none">
+          Neighbour Reports
         </h2>
       </div>
 

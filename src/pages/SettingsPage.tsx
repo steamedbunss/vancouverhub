@@ -98,7 +98,11 @@ export function SettingsPage() {
       </div>
 
       {/*Save and discard action buttons*/}
-      <div className="mt-12 flex items-center gap-4">
+      <div
+        className={`mt-8 flex items-center gap-4 ${
+          token ? 'xl:-mt-72' : ''
+        }`}
+      >
         <button
           type="button"
           onClick={handleSave}

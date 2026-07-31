@@ -32,6 +32,34 @@ body {
   @apply m-0 min-h-screen bg-white font-sans text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-100;
 }
 
+/* Hide page and nested scrollbars while idle, then reveal them during scrolling. */
+* {
+  scrollbar-color: transparent transparent;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: transparent;
+}
+
+*.is-scrolling {
+  scrollbar-color: rgb(148 163 184 / 0.75) transparent;
+}
+
+*.is-scrolling::-webkit-scrollbar-thumb {
+  background: rgb(148 163 184 / 0.75);
+}
+
 @keyframes bell-pulse {
   0%,
   100% {
@@ -122,7 +150,8 @@ body {
 
 .dashboard-green-cycle,
 .dashboard-blue-cycle,
-.dashboard-yellow-cycle {
+.dashboard-yellow-cycle,
+.dashboard-red-cycle {
   color: transparent;
   background-position: 0% 50%;
   background-size: 200% auto;
@@ -177,6 +206,21 @@ body {
     drop-shadow(0 0 32px rgb(245 158 11 / 0.5));
 }
 
+.dashboard-red-cycle {
+  background-image: linear-gradient(
+    90deg,
+    #ff1744,
+    #ef4444,
+    #dc2626,
+    #991b1b,
+    #fb7185,
+    #ff1744
+  );
+  filter:
+    drop-shadow(0 0 8px rgb(239 68 68 / 0.72))
+    drop-shadow(0 0 32px rgb(185 28 28 / 0.48));
+}
+
 .gradients-disabled .rainbow-text-glow {
   display: none;
 }
@@ -184,7 +228,8 @@ body {
 .gradients-disabled .rainbow-text-face,
 .gradients-disabled .dashboard-green-cycle,
 .gradients-disabled .dashboard-blue-cycle,
-.gradients-disabled .dashboard-yellow-cycle {
+.gradients-disabled .dashboard-yellow-cycle,
+.gradients-disabled .dashboard-red-cycle {
   color: currentColor;
   background-image: none;
   filter: none;
@@ -199,7 +244,8 @@ body {
 .guest-static-colors .rainbow-text-face,
 .guest-static-colors .dashboard-green-cycle,
 .guest-static-colors .dashboard-blue-cycle,
-.guest-static-colors .dashboard-yellow-cycle {
+.guest-static-colors .dashboard-yellow-cycle,
+.guest-static-colors .dashboard-red-cycle {
   color: #000 !important;
   background-image: none !important;
   filter: none;
@@ -373,6 +419,7 @@ body {
   .dashboard-green-cycle,
   .dashboard-blue-cycle,
   .dashboard-yellow-cycle,
+  .dashboard-red-cycle,
   .appearance-gradient-preview,
   .settings-page:not(.settings-page--guest) section {
     animation: none;
@@ -380,7 +427,8 @@ body {
 
   .dashboard-green-cycle,
   .dashboard-blue-cycle,
-  .dashboard-yellow-cycle {
+  .dashboard-yellow-cycle,
+  .dashboard-red-cycle {
     background-position: 50% 50%;
   }
 
@@ -415,6 +463,36 @@ body {
     #0a2f6e 80%,
     #041a42 100%
   );
+}
+
+.weather-bg-clear-night {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 75% 18%, #244b78 0%, #102c55 30%, #071a38 65%, #020b1d 100%);
+}
+
+.weather-moon {
+  position: absolute;
+  top: 13%;
+  right: 20%;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #fff8d8;
+  box-shadow: 0 0 28px 10px rgb(255 248 216 / 0.28);
+}
+
+.weather-stars {
+  position: absolute;
+  inset: 0;
+  opacity: 0.7;
+  background-image:
+    radial-gradient(circle at 12% 18%, #fff 0 1px, transparent 1.5px),
+    radial-gradient(circle at 31% 10%, #fff 0 1px, transparent 1.5px),
+    radial-gradient(circle at 48% 26%, #fff 0 1px, transparent 1.5px),
+    radial-gradient(circle at 62% 8%, #fff 0 1px, transparent 1.5px),
+    radial-gradient(circle at 88% 35%, #fff 0 1px, transparent 1.5px),
+    radial-gradient(circle at 22% 52%, #fff 0 1px, transparent 1.5px);
 }
 
 .weather-sun-core {
@@ -517,10 +595,51 @@ body {
   animation-delay: -4s;
 }
 
+.weather-cloud-day-a,
+.weather-cloud-night-a {
+  width: 190px;
+  height: 62px;
+  top: 20%;
+  left: 58%;
+  animation-duration: 26s;
+}
+
+.weather-cloud-day-b,
+.weather-cloud-night-b {
+  width: 150px;
+  height: 50px;
+  top: 48%;
+  left: -12%;
+  animation-duration: 30s;
+  animation-delay: -12s;
+}
+
+.weather-cloud-day-a,
+.weather-cloud-day-b {
+  background: rgb(255 255 255 / 0.42);
+}
+
+.weather-cloud-night-a,
+.weather-cloud-night-b {
+  background: rgb(190 210 235 / 0.24);
+}
+
 .weather-bg-rain {
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, #2a3648 0%, #16202e 40%, #0a1119 100%);
+}
+
+.weather-bg-mixed,
+.weather-bg-ice {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #405064 0%, #202c3b 45%, #0b121c 100%);
+}
+
+.weather-bg-heavy,
+.weather-bg-severe {
+  filter: brightness(0.72) saturate(0.85);
 }
 
 .weather-drop {
@@ -534,6 +653,36 @@ body {
     rgb(180 210 255 / 0.75) 100%
   );
   animation: weather-rain-fall linear infinite;
+}
+
+.weather-drop.weather-particle-light,
+.weather-drop.weather-particle-possible {
+  width: 1px;
+  height: 48px;
+  opacity: 0.58;
+}
+
+.weather-drop.weather-particle-heavy,
+.weather-drop.weather-particle-severe {
+  width: 3px;
+  height: 88px;
+}
+
+.weather-drop.weather-particle-severe {
+  animation-name: weather-rain-fall-severe;
+}
+
+.weather-thunder-light,
+.weather-thunder-possible {
+  animation-duration: 7s;
+}
+
+.weather-thunder-heavy {
+  animation-duration: 3.2s;
+}
+
+.weather-thunder-severe {
+  animation-duration: 2.3s;
 }
 
 .weather-bg-thunder {
@@ -563,6 +712,25 @@ body {
   background: rgb(255 255 255 / 0.9);
   box-shadow: 0 0 4px rgb(255 255 255 / 0.5);
   animation: weather-snow-fall linear infinite;
+}
+
+.weather-flake.weather-particle-light,
+.weather-flake.weather-particle-possible {
+  opacity: 0.66;
+}
+
+.weather-pellet {
+  position: absolute;
+  top: -12px;
+  border-radius: 50%;
+  background: rgb(215 235 255 / 0.9);
+  box-shadow: 0 0 5px rgb(180 220 255 / 0.7);
+  animation: weather-pellet-fall linear infinite;
+}
+
+.weather-hail {
+  background: #f4fbff;
+  box-shadow: 0 0 7px rgb(255 255 255 / 0.85);
 }
 
 .weather-bg-fog {
@@ -638,6 +806,15 @@ body {
   }
 }
 
+@keyframes weather-rain-fall-severe {
+  from {
+    transform: translate3d(-35px, -20px, 0) rotate(12deg);
+  }
+  to {
+    transform: translate3d(85px, 420px, 0) rotate(12deg);
+  }
+}
+
 @keyframes weather-thunder-flash {
   0%,
   88%,
@@ -667,6 +844,12 @@ body {
   }
 }
 
+@keyframes weather-pellet-fall {
+  to {
+    transform: translate3d(26px, 420px, 0);
+  }
+}
+
 @keyframes weather-fog-breathe {
   0%,
   100% {
@@ -684,6 +867,7 @@ body {
   .weather-sun-ray-diag,
   .weather-drop,
   .weather-flake,
+  .weather-pellet,
   .weather-thunder-flash,
   .weather-fog-layer {
     animation: none;

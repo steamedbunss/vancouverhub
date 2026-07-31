@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Info } from 'lucide-react'
 import { formatUpdateDateTime } from '../../lib/formatters/dateTime'
 import type { ApiFireWeather } from '../../types/backend'
@@ -24,6 +25,7 @@ const DANGER_SEGMENT_COLORS = [
 
 //FireWeatherCard shows FWI, danger rating, and a colored segment bar for a station
 export function FireWeatherCard({ weather }: FireWeatherCardProps) {
+  const [showFwiTooltip, setShowFwiTooltip] = useState(false)
   const rating = weather.dangerRating
   //filledCount is how many bar segments to highlight, clamped between 0 and 5
   const filledCount =
@@ -36,16 +38,21 @@ export function FireWeatherCard({ weather }: FireWeatherCardProps) {
   return (
     <section className={`rounded-3xl p-6 md:p-8 ${themedCard}`}>
       {/*Header with station name, info tooltip, and last updated time*/}
-      <div className="group flex flex-wrap items-start gap-3">
+      <div className="flex flex-wrap items-start gap-3">
         <div className="min-w-0 shrink-0">
           <div className="flex items-center gap-2">
             <h2 className="text-2xl font-black tracking-tight">
-              Nearby fire weather station
+              Fire Containment Difficulty
             </h2>
             <button
               type="button"
               className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-current ${themedCardAccent} hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400`}
               aria-label="Fire Weather Index details"
+              aria-describedby="fire-weather-index-tooltip"
+              onMouseEnter={() => setShowFwiTooltip(true)}
+              onMouseLeave={() => setShowFwiTooltip(false)}
+              onFocus={() => setShowFwiTooltip(true)}
+              onBlur={() => setShowFwiTooltip(false)}
             >
               <Info className="h-3.5 w-3.5" aria-hidden />
             </button>
@@ -56,11 +63,15 @@ export function FireWeatherCard({ weather }: FireWeatherCardProps) {
         </div>
 
         <div className="flex min-w-0 flex-1 items-start justify-end gap-3">
-          {/*FWI tooltip appears on group hover or focus*/}
+          {/*FWI tooltip toggles on info button mouse enter/leave and focus/blur*/}
           <div className="relative min-h-[3.25rem] min-w-0 flex-1">
             <div
+              id="fire-weather-index-tooltip"
               role="tooltip"
-              className="absolute inset-x-0 top-0 flex items-center gap-3 rounded-lg border border-black/15 bg-gray-50 px-3 py-1.5 opacity-0 transition-opacity duration-150 dark:border-white/25 dark:bg-white/5 group-hover:opacity-100 group-focus-within:opacity-100"
+              aria-hidden={!showFwiTooltip}
+              className={`absolute inset-x-0 top-0 flex items-center gap-3 rounded-lg border border-black/15 bg-gray-50 px-3 py-1.5 transition-opacity duration-150 dark:border-white/25 dark:bg-white/5 ${
+                showFwiTooltip ? 'opacity-100' : 'pointer-events-none opacity-0'
+              }`}
             >
               <div className="shrink-0 leading-none">
                 <p className={`text-[10px] font-semibold uppercase ${themedCardMuted}`}>FWI</p>
@@ -111,9 +122,6 @@ export function FireWeatherCard({ weather }: FireWeatherCardProps) {
               )
             })}
           </div>
-          <p className={`mt-3 max-w-sm text-sm leading-relaxed ${themedCardMuted}`}>
-            How hard a fire would be to control today, if one started.
-          </p>
         </div>
       </div>
     </section>

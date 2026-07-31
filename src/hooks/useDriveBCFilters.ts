@@ -13,30 +13,51 @@ const DEFAULT_FILTERS: FilterState = {
   types: [],
   areas: [],
   roads: [],
-  sortBy: "SEVERITY",
+  sortBy: "UPDATED_DESC",
 }
 
 //declaring localStorage key for persisting DriveBC filter preferences
 const STORAGE_KEY = "vancouverhub_drivebc_filters_v1"
 
+//declaring filter fields saved across page refreshes; sort always resets to default
+type PersistedFilters = Omit<FilterState, "sortBy">
+
+//This function loads persisted filters and always applies the default sort option
+function loadPersistedFilters(): FilterState {
+  if (typeof window === "undefined") return DEFAULT_FILTERS
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (!saved) return DEFAULT_FILTERS
+    const parsed = JSON.parse(saved) as Partial<PersistedFilters>
+    return {
+      ...DEFAULT_FILTERS,
+      search: parsed.search ?? "",
+      severities: parsed.severities ?? [],
+      types: parsed.types ?? [],
+      areas: parsed.areas ?? [],
+      roads: parsed.roads ?? [],
+    }
+  } catch {
+    return DEFAULT_FILTERS
+  }
+}//loadPersistedFilters
+
+//This function saves filter preferences without persisting the sort selection
+function savePersistedFilters(filters: FilterState) {
+  try {
+    const { sortBy: _sortBy, ...persisted } = filters
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted))
+  } catch (e) {
+    console.warn("Could not save filters to localStorage", e)
+  }
+}//savePersistedFilters
+
 //This function manages DriveBC event filtering, sorting, and persisted filter state
 export function useDriveBCFilters(events: DriveBCEvent[], enableSearch = true) {
-  const [filters, setFilters] = useState<FilterState>(() => {
-    if (typeof window === "undefined") return DEFAULT_FILTERS
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      return saved ? JSON.parse(saved) : DEFAULT_FILTERS
-    } catch {
-      return DEFAULT_FILTERS
-    }
-  })
+  const [filters, setFilters] = useState<FilterState>(loadPersistedFilters)
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(filters))
-    } catch (e) {
-      console.warn("Could not save filters to localStorage", e)
-    }
+    savePersistedFilters(filters)
   }, [filters])
 
   const debouncedSearch = useDebounce(filters.search, 250)

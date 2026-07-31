@@ -3,7 +3,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useServiceRequestPreferences } from '../context/ServiceRequestPreferencesContext'
-import { getNearbyServiceRequests } from '../lib/api/serviceRequests'
+import {
+  getNearbyServiceRequests,
+} from '../lib/api/serviceRequests'
 import type { ApiServiceRequest, ApiServiceRequestCategory } from '../types/backend'
 import { ServiceRequestCard } from '../components/safety/ServiceRequestCard'
 import { RainbowText } from '../components/RainbowText'
@@ -36,15 +38,13 @@ export function Safety311Page() {
   const [selectedCategories, setSelectedCategories] = useState<ApiServiceRequestCategory[]>([])
   //locationId comes from the signed in user saved home location
   const locationId = user?.location?.id
-  //filteredRequests applies category filters and sorts unseen requests above seen ones
+  //filteredRequests applies category filters and keeps seen reports at the bottom
   const filteredRequests = useMemo(() => {
-    const list =
-      selectedCategories.length === 0
-        ? requests
-        : requests.filter((request) => selectedCategories.includes(request.category))
+    const list = selectedCategories.length === 0
+      ? requests
+      : requests.filter((request) => selectedCategories.includes(request.category))
 
-    //Unseen stay in distance order; seen sink to the bottom
-    return [...list].sort((a, b) => Number(a.seen) - Number(b.seen))
+    return [...list].sort((first, second) => Number(first.seen) - Number(second.seen))
   }, [requests, selectedCategories])
 
   //This useEffect runs when auth, location, token, or preferences version changes
@@ -98,9 +98,9 @@ export function Safety311Page() {
       {/*Page header with title and description*/}
       <header className="max-w-3xl">
         <h1 className="text-4xl font-black tracking-tight text-gray-900 md:text-5xl dark:text-white">
-          <RainbowText>Reports Near You</RainbowText>
+          <RainbowText>Happening Around You</RainbowText>
         </h1>
-        <p className="mt-3 text-white">
+        <p className="mt-3 text-gray-600 dark:text-gray-300">
           Track open city service requests around your saved home location.
         </p>
       </header>
@@ -126,7 +126,7 @@ export function Safety311Page() {
       {!guest && !missingLocation && (
         <>
           {/*Category filter pills and result count*/}
-          <div className="mt-8 flex flex-wrap gap-2 border-b border-gray-200 pb-4 dark:border-gray-700">
+          <div className="sticky top-[6.1rem] z-30 -mx-2 mt-8 flex flex-nowrap items-center gap-2 overflow-x-auto border-b border-gray-200 bg-white/95 px-2 py-3 shadow-sm backdrop-blur-sm lg:top-16 dark:border-gray-700 dark:bg-gray-950/95">
             <button
               type="button"
               onClick={() => setSelectedCategories([])}
@@ -161,16 +161,16 @@ export function Safety311Page() {
               type="button"
               onClick={() => setSelectedCategories([])}
               disabled={selectedCategories.length === 0}
-              className="px-3 py-2 text-sm font-semibold text-white transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-full border border-gray-400 bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-800 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
             >
               Clear
             </button>
             <p
-              className="ml-auto self-center text-sm text-white"
+              className="ml-auto shrink-0 self-center whitespace-nowrap pl-4 text-sm text-gray-600 dark:text-gray-300"
               aria-live="polite"
             >
-              Showing <strong className="font-bold text-white">{filteredRequests.length}</strong> of{' '}
-              <strong className="font-bold text-white">{requests.length}</strong>
+              Showing <strong className="font-bold text-gray-900 dark:text-white">{filteredRequests.length}</strong> of{' '}
+              <strong className="font-bold text-gray-900 dark:text-white">{requests.length}</strong>
             </p>
           </div>
 

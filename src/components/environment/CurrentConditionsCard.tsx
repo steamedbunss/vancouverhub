@@ -2,11 +2,10 @@ import type { ApiWeather } from '../../types/backend'
 import { useAuth } from '../../context/AuthContext'
 import { useUserConfig } from '../../context/UserConfigContext'
 import {
-  resolveWeatherScene,
+  resolveWeatherVisual,
   weatherSummaryEmoji,
 } from '../../lib/weather/weatherScene'
 import {
-  themedCard,
   themedCardDivider,
   themedCardMuted,
   themedCardSubtle,
@@ -42,10 +41,19 @@ function formatPrecipitation(weather: ApiWeather) {
 export function CurrentConditionsCard({ weather }: CurrentConditionsCardProps) {
   const { token } = useAuth()
   const { config } = useUserConfig()
-  const scene = resolveWeatherScene(weather.summary)
+  const weatherSceneInput = {
+    summary: weather.summary,
+    icon: weather.icon,
+    iconNumber: weather.iconNumber,
+    precipitation: weather.precipitation,
+    precipitationType: weather.precipitationType,
+    windSpeed: weather.windSpeed,
+  }
+  const weatherVisual = resolveWeatherVisual(weatherSceneInput)
+  const scene = weatherVisual?.scene ?? null
   //showAnimatedBackground is true when signed in and the summary maps to a scene
   const showAnimatedBackground = Boolean(token) && scene !== null
-  const emoji = weatherSummaryEmoji(weather.summary)
+  const emoji = weatherSummaryEmoji(weatherSceneInput)
   //overlayOpacity darkens the animated background so white text stays readable
   const overlayOpacity = Math.min(
     80,
@@ -61,13 +69,16 @@ export function CurrentConditionsCard({ weather }: CurrentConditionsCardProps) {
       className={`relative h-fit overflow-hidden rounded-3xl ${
         showAnimatedBackground
           ? 'border border-white/25 text-white shadow-[0_0_18px_rgba(255,255,255,0.25)]'
-          : themedCard
+          : 'border border-black bg-white text-gray-900 shadow-sm dark:border-white dark:bg-gray-950 dark:text-white dark:shadow-[0_0_18px_rgba(255,255,255,0.45)]'
       }`}
     >
       {/*Animated weather background and dark overlay for signed-in users*/}
-      {showAnimatedBackground && scene && (
+      {showAnimatedBackground && weatherVisual && (
         <>
-          <WeatherSceneBackground scene={scene} />
+          <WeatherSceneBackground
+            scene={weatherVisual.scene}
+            intensity={weatherVisual.intensity}
+          />
           <div
             className="weather-bg-overlay"
             style={{ background: `rgba(0, 0, 0, ${overlayOpacity / 100})` }}

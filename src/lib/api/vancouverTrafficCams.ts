@@ -29,7 +29,8 @@ const DIRECTION_ORDER: CameraDirection[] = [
   'West',
 ]
 
-//This function returns the base URL, using Vite proxy in dev to avoid CORS
+//This function returns the same-origin traffic-camera proxy base path
+//Vite proxies /proxy/trafficcams in local dev; Netlify rewrites it in production
 function trafficCamsBase(): string {
   return '/proxy/trafficcams'
 }//trafficCamsBase
