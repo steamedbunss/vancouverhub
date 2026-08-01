@@ -1,9 +1,16 @@
 //declaring react context hooks and auth API helpers
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { getCurrentUser, login, register } from '../lib/api/auth'
+import { confirmEmail, getCurrentUser, login, register } from '../lib/api/auth'
 import { clearStoredToken, getStoredToken, storeToken } from '../lib/api/client'
 import { setFuelPreference, setHomeLocation } from '../lib/api/users'
-import type { ApiFuelType, ApiUser, HomeLocationInput, LoginCredentials, RegisterCredentials } from '../types/backend'
+import type {
+  ApiFuelType,
+  ApiUser,
+  HomeLocationInput,
+  LoginCredentials,
+  MessageResponse,
+  RegisterCredentials,
+} from '../types/backend'
 
 //declaring auth context value shape exposed to consuming components
 interface AuthContextValue {
@@ -11,7 +18,8 @@ interface AuthContextValue {
   user: ApiUser | null
   isLoading: boolean
   loginWithCredentials: (credentials: LoginCredentials) => Promise<void>
-  registerWithCredentials: (credentials: RegisterCredentials) => Promise<void>
+  registerWithCredentials: (credentials: RegisterCredentials) => Promise<MessageResponse>
+  confirmEmailAndSignIn: (token: string) => Promise<void>
   refreshUser: () => Promise<void>
   saveHomeLocation: (location: HomeLocationInput) => Promise<void>
   saveFuelPreference: (fuelType: ApiFuelType) => Promise<void>
@@ -60,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void refreshUser()
   }, [refreshUser])
 
-  //This function stores the token and loads the user profile after login or register
+  //This function stores the token and loads the user profile after login or confirmation
   const completeAuthentication = useCallback(async (newToken: string) => {
     storeToken(newToken)
     setToken(newToken)
@@ -73,10 +81,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await completeAuthentication(response.token)
   }, [completeAuthentication])//loginWithCredentials
 
-  const registerWithCredentials = useCallback(async (credentials: RegisterCredentials) => {
-    const response = await register(credentials)
+  const registerWithCredentials = useCallback(
+    (credentials: RegisterCredentials) => register(credentials),
+    [],
+  )//registerWithCredentials
+
+  const confirmEmailAndSignIn = useCallback(async (confirmationToken: string) => {
+    const response = await confirmEmail(confirmationToken)
     await completeAuthentication(response.token)
-  }, [completeAuthentication])//registerWithCredentials
+  }, [completeAuthentication])//confirmEmailAndSignIn
 
   const saveHomeLocation = useCallback(async (location: HomeLocationInput) => {
     if (!token) throw new Error('Sign in before saving a home location.')
@@ -96,11 +109,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     loginWithCredentials,
     registerWithCredentials,
+    confirmEmailAndSignIn,
     refreshUser,
     saveHomeLocation,
     saveFuelPreference,
     logout,
-  }), [token, user, isLoading, loginWithCredentials, registerWithCredentials, refreshUser, saveHomeLocation, saveFuelPreference, logout])
+  }), [
+    token,
+    user,
+    isLoading,
+    loginWithCredentials,
+    registerWithCredentials,
+    confirmEmailAndSignIn,
+    refreshUser,
+    saveHomeLocation,
+    saveFuelPreference,
+    logout,
+  ])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }//AuthProvider

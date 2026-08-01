@@ -34,6 +34,11 @@ export interface TokenResponse {
   token: string
 }
 
+//declaring message-only response from register and recovery endpoints
+export interface MessageResponse {
+  message: string
+}
+
 //declaring home location input for saving user coordinates
 export interface HomeLocationInput {
   latitude: number
