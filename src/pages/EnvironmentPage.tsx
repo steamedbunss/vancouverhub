@@ -11,6 +11,7 @@ import {
   EvacuationOrderIcon,
   WildfireCard,
 } from '../components/environment/WildfireCard'
+import { NumberStepper } from '../components/ui/NumberStepper'
 import { useAuth } from '../context/AuthContext'
 import { useResolvedLocation } from '../context/LocationContext'
 import {
@@ -67,6 +68,13 @@ export function EnvironmentPage() {
   const [showAllWildfires, setShowAllWildfires] = useState(false)
   //declaring state for the active wildfire status or evacuation filter
   const [wildfireFilter, setWildfireFilter] = useState<WildfireFilter>('all')
+
+  //This function changes the number of visible wildfire cards within its bounds
+  function stepCardCount(direction: 1 | -1) {
+    const maximum = Math.max(inputMaximumCardCount, 1)
+    setShowAllWildfires(false)
+    setCardCount((currentCount) => Math.min(maximum, Math.max(1, currentCount + direction)))
+  }//stepCardCount
 
   //This useEffect runs when location or token changes
   //It loads active wildfires, evacuation notices, and optional signed in AQHI and fire weather
@@ -186,17 +194,16 @@ export function EnvironmentPage() {
 
       {/*Active wildfires section with filters, legend, and card grid*/}
       <section className="mt-14">
-        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
-          <h2 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white">{wildfireTitle}</h2>
+        <div className="flex flex-col gap-4 lg:flex-row lg:flex-nowrap lg:items-end lg:justify-between lg:gap-4">
+          <h2 className="shrink-0 text-3xl font-black tracking-tight text-gray-900 dark:text-white">{wildfireTitle}</h2>
 
           {/*Wildfire count input, show all toggle, and status filter dropdown*/}
-          <div className="flex flex-wrap items-end gap-3">
+          <div className="grid items-end gap-3 sm:grid-cols-[auto_13rem] lg:grid-cols-[auto_13rem_13.5rem]">
             <label className="flex flex-col gap-1.5 text-sm font-semibold text-gray-700 dark:text-gray-200">
               Cards to show
               <div className="flex overflow-hidden rounded-lg border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-900">
-                <input
-                  type="number"
-                  min="1"
+                <NumberStepper
+                  min={1}
                   max={Math.max(inputMaximumCardCount, 1)}
                   value={safeCardCount}
                   disabled={showAllWildfires && Boolean(token)}
@@ -204,7 +211,9 @@ export function EnvironmentPage() {
                     setShowAllWildfires(false)
                     setCardCount(Number(event.target.value) || 1)
                   }}
-                  className="w-20 px-3 py-2 text-sm font-medium text-gray-900 outline-none disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-900 dark:text-white dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
+                  onIncrement={() => stepCardCount(1)}
+                  onDecrement={() => stepCardCount(-1)}
+                  inputClassName="w-20 px-3 py-2 pr-7 text-sm font-medium text-gray-900 outline-none disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-900 dark:text-white dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
                 />
                 <button
                   type="button"
@@ -234,9 +243,9 @@ export function EnvironmentPage() {
               </select>
             </label>
 
-            <p className="pb-2 text-sm text-gray-500 dark:text-gray-400">
-              Showing <strong className="font-bold text-gray-700 dark:text-gray-200">{visibleFires.length}</strong> of{' '}
-              <strong className="font-bold text-gray-700 dark:text-gray-200">{fires.length}</strong> wildfires
+            <p className="pb-2 text-sm whitespace-nowrap text-gray-500 sm:col-span-2 lg:col-span-1 dark:text-gray-400">
+              Showing <strong className="inline-block w-7 text-right font-bold tabular-nums text-gray-700 dark:text-gray-200">{visibleFires.length}</strong> of{' '}
+              <strong className="inline-block w-7 text-right font-bold tabular-nums text-gray-700 dark:text-gray-200">{fires.length}</strong> wildfires
             </p>
           </div>
         </div>

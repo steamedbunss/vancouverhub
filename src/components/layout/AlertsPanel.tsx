@@ -17,7 +17,7 @@ function formatAlertTime(value: string) {
 
 //AlertsPanel is the dropdown list of active threshold alerts from the bell icon
 export function AlertsPanel({ onClose }: { onClose: () => void }) {
-  const { activeAlerts, loading } = useAlerts()
+  const { activeAlerts, loading, dismissWildfireAlert } = useAlerts()
   const { token } = useAuth()
 
   return (
@@ -56,8 +56,26 @@ export function AlertsPanel({ onClose }: { onClose: () => void }) {
               className="border-b border-gray-50 px-4 py-3 last:border-0"
             >
               <p className="text-sm font-medium text-gray-900">{alert.title}</p>
-              <p className="mt-1 text-xs leading-relaxed text-gray-600">{alert.message}</p>
+              <p className="mt-1 whitespace-pre-line text-xs leading-relaxed text-gray-600">{alert.message}</p>
               <p className="mt-2 text-[11px] text-gray-400">{formatAlertTime(alert.issuedAt)}</p>
+              {alert.dismissible && alert.wildfireFireNumbers && (
+                <div className="mt-2 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => dismissWildfireAlert(alert.wildfireFireNumbers ?? [])}
+                    className="text-xs font-medium text-hub-navy hover:underline"
+                  >
+                    Dismiss
+                  </button>
+                  <Link
+                    to="/environment"
+                    onClick={onClose}
+                    className="text-xs font-medium text-hub-navy hover:underline"
+                  >
+                    View wildfires →
+                  </Link>
+                </div>
+              )}
             </div>
           ))
         )}

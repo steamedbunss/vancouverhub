@@ -79,14 +79,14 @@ export function UpcomingEventsCalendar({ events, header }: { events: ApiEvent[];
 
   return (
     <div>
-      <div className="grid items-start gap-8 lg:items-stretch lg:grid-cols-[minmax(0,1fr)_24rem]">
+      <div className="grid items-start gap-8 lg:h-96 lg:items-stretch lg:grid-cols-[minmax(0,1fr)_24rem]">
         {/*Left column with page header and desktop date summary*/}
-        <div className="flex flex-col lg:min-h-full">
+        <div className="flex flex-col lg:min-h-full lg:pt-10">
           {header}
           <SelectedDateSummary label={selectedDateLabel} count={visibleEvents.length} className="mt-auto hidden pt-8 lg:block" />
         </div>
         {/*Right column month calendar with prev/next navigation*/}
-        <section className="w-full max-w-sm justify-self-start rounded-xl border border-black bg-white p-3 text-gray-900 shadow-sm lg:justify-self-end dark:border-white dark:bg-gray-950 dark:text-white dark:shadow-[0_0_18px_rgba(255,255,255,0.45)]">
+        <section className="w-full max-w-sm self-start justify-self-start rounded-xl border border-black bg-white p-3 text-gray-900 shadow-sm lg:justify-self-end dark:border-white dark:bg-gray-950 dark:text-white dark:shadow-[0_0_18px_rgba(255,255,255,0.45)]">
           <div className="flex items-center justify-between">
             <button type="button" aria-label="Previous month" onClick={() => setDisplayMonth((month) => new Date(month.getFullYear(), month.getMonth() - 1, 1))} className="rounded-md p-1.5 text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800">
               <ChevronLeft className="h-4 w-4" />

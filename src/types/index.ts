@@ -81,4 +81,7 @@ export interface AlertItem {
   title: string
   message: string
   issuedAt: string
+  wildfireFireNumbers?: string[]
+  dismissible?: boolean
+  wildfireAlertKind?: 'new' | 'missed'
 }

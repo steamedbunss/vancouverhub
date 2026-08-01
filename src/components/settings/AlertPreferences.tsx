@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Lock } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useUserConfig } from '../../context/UserConfigContext'
 import { RainbowText } from '../RainbowText'
+import { NumberStepper } from '../ui/NumberStepper'
 import { Toggle } from '../ui/Toggle'
 
 //AlertPreferences lets signed-in users configure alert thresholds and delivery method
@@ -61,7 +63,7 @@ export function AlertPreferences() {
             onValueChange={(value) => setDraftAlertThreshold('aqhi', value)}
           />
           <AlertRule
-            label="Nearby wildfire"
+            label="New or previously unseen nearby wildfires"
             suffix="km or closer"
             value={draft.alertThresholds.wildfireDistanceKm}
             min={1}
@@ -109,6 +111,11 @@ export function AlertPreferences() {
   )
 }//AlertPreferences
 
+//This function clamps a threshold to optional min and max bounds
+function clampThreshold(value: number, min: number, max?: number) {
+  return Math.max(min, max === undefined ? value : Math.min(max, value))
+}//clampThreshold
+
 //AlertRule is one row with a threshold number input and enable toggle
 function AlertRule({
   label,
@@ -129,28 +136,67 @@ function AlertRule({
   onCheckedChange: (value: boolean) => void
   onValueChange: (value: number) => void
 }) {
+  //inputValue holds free-form text while the field is focused so partial edits are allowed
+  const [inputValue, setInputValue] = useState(String(value))
+  const [isEditing, setIsEditing] = useState(false)
+
+  //This useEffect syncs the text field when the saved value changes and the user is not typing
+  useEffect(() => {
+    if (!isEditing) setInputValue(String(value))
+  }, [isEditing, value])
+
+  //commitInputValue parses, clamps, and saves the threshold when editing finishes
+  function commitInputValue() {
+    setIsEditing(false)
+    const trimmed = inputValue.trim()
+    if (trimmed === '') {
+      setInputValue(String(value))
+      return
+    }
+
+    const parsed = Number(trimmed)
+    if (!Number.isFinite(parsed)) {
+      setInputValue(String(value))
+      return
+    }
+
+    const constrainedValue = clampThreshold(parsed, min, max)
+    setInputValue(String(constrainedValue))
+    if (constrainedValue !== value) onValueChange(constrainedValue)
+  }//commitInputValue
+
+  //This function increments or decrements the threshold within its allowed bounds
+  function stepInputValue(direction: 1 | -1) {
+    const currentValue = Number(inputValue)
+    const baseValue = Number.isFinite(currentValue) ? currentValue : value
+    const constrainedValue = clampThreshold(baseValue + direction, min, max)
+    setInputValue(String(constrainedValue))
+    setIsEditing(false)
+    if (constrainedValue !== value) onValueChange(constrainedValue)
+  }//stepInputValue
+
   return (
     <div className="flex items-center gap-3 py-2.5">
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{label}</p>
         <label className="mt-1 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
           Alert at
-          <input
-            type="number"
+          <NumberStepper
             min={min}
             max={max}
-            value={value}
-            onChange={(event) => {
-              const nextValue = Number(event.target.value)
-              if (!Number.isFinite(nextValue)) return
-
-              const constrainedValue = Math.max(
-                min,
-                max === undefined ? nextValue : Math.min(max, nextValue),
-              )
-              onValueChange(constrainedValue)
+            value={isEditing ? inputValue : String(value)}
+            onFocus={() => {
+              setIsEditing(true)
+              setInputValue(String(value))
             }}
-            className="w-14 rounded border border-gray-300 px-1.5 py-1 text-center text-xs text-gray-800 outline-none focus:border-hub-navy dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+            onChange={(event) => setInputValue(event.target.value)}
+            onBlur={commitInputValue}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') event.currentTarget.blur()
+            }}
+            onIncrement={() => stepInputValue(1)}
+            onDecrement={() => stepInputValue(-1)}
+            inputClassName="w-14 rounded border border-gray-300 px-1.5 py-1 pr-6 text-center text-xs text-gray-800 outline-none focus:border-hub-navy dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
           />
           {suffix}
         </label>

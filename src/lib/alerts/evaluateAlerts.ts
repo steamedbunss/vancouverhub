@@ -1,7 +1,6 @@
 //declaring alert types from shared types and backend environment types
 import type { AlertItem, AlertPreferences, AlertThresholds } from '../../types'
-import type { ApiAqhi, ApiFireWeather, ApiWeather, ApiWildfire } from '../../types/backend'
-import { distanceBetweenKm } from '../location/distance'
+import type { ApiAqhi, ApiFireWeather, ApiWeather } from '../../types/backend'
 
 //declaring input shape for alert evaluation with all environment data sources
 interface EvaluateAlertsInput {
@@ -10,9 +9,6 @@ interface EvaluateAlertsInput {
   weather: ApiWeather | null
   aqhi: ApiAqhi | null
   fireWeather: ApiFireWeather | null
-  wildfires: ApiWildfire[]
-  latitude: number | null
-  longitude: number | null
 }
 
 //This function maps threshold overrun amount to warning or critical severity
@@ -27,9 +23,6 @@ export function evaluateAlerts({
   weather,
   aqhi,
   fireWeather,
-  wildfires,
-  latitude,
-  longitude,
 }: EvaluateAlertsInput): AlertItem[] {
   const alerts: AlertItem[] = []
 
@@ -68,28 +61,6 @@ export function evaluateAlerts({
       message: `${fireWeather.stationName}: danger rating ${fireWeather.dangerRating}/5 (${fireWeather.dangerLabel}) meets your ${thresholds.fireDangerRating}/5 threshold.`,
       issuedAt: fireWeather.observedAt,
     })
-  }
-
-  if (preferences.wildfire && latitude != null && longitude != null) {
-    const nearest = wildfires
-      .filter((fire) => fire.latitude != null && fire.longitude != null)
-      .map((fire) => ({
-        fire,
-        distanceKm: distanceBetweenKm(latitude, longitude, fire.latitude!, fire.longitude!),
-      }))
-      .sort((a, b) => a.distanceKm - b.distanceKm)[0]
-
-    if (nearest && nearest.distanceKm <= thresholds.wildfireDistanceKm) {
-      const isOutOfControl = nearest.fire.status.toLowerCase().includes('out of control')
-      alerts.push({
-        id: `wildfire-${nearest.fire.id}`,
-        type: 'wildfire',
-        severity: isOutOfControl ? 'critical' : 'warning',
-        title: 'Nearby wildfire threshold reached',
-        message: `${nearest.fire.incidentName} is ${nearest.distanceKm.toFixed(1)} km away, within your ${thresholds.wildfireDistanceKm} km alert threshold.`,
-        issuedAt: nearest.fire.lastSyncedAt,
-      })
-    }
   }
 
   return alerts

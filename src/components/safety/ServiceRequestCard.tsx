@@ -1,6 +1,7 @@
-import type { ApiServiceRequest, ApiServiceRequestCategory } from '../../types/backend'
+import type { ApiServiceRequest } from '../../types/backend'
 import { getServiceRequestCategoryColor } from '../../constants/serviceRequestCategories'
 import { resolveServiceRequestTitle } from '../../utils/serviceRequestTitle'
+import { ServiceRequestIcon } from './ServiceRequestIcon'
 
 //declaring props for a single 311 service request card
 interface ServiceRequestCardProps {
@@ -12,16 +13,6 @@ interface ServiceRequestCardProps {
   /** Neon variant uses gray surfaces with white border glow on dark mode (311 page). */
   variant?: 'default' | 'neon'
   className?: string
-}
-
-//constant map from category id to display emoji for the card corner
-const CATEGORY_EMOJI: Record<ApiServiceRequestCategory, string> = {
-  ROAD: '🛣️',
-  GARBAGE: '🗑️',
-  WATER: '💧',
-  GRAFFITI: '🎨',
-  NOISE: '🔊',
-  SAFETY: '⚠️',
 }
 
 //formatOpenedSince turns an ISO date string into a readable "Opened since ..." label
@@ -52,7 +43,6 @@ export function ServiceRequestCard({
   const category = request.category.charAt(0) + request.category.slice(1).toLowerCase()
   const distance = request.distanceKm === null ? null : `${request.distanceKm.toFixed(1)} km away`
   const title = resolveServiceRequestTitle(request.requestType, request.id)
-  const emoji = CATEGORY_EMOJI[request.category] ?? '📌'
   const isNeon = variant === 'neon'
   const seen = showSeenStatus && request.seen
 
@@ -67,7 +57,7 @@ export function ServiceRequestCard({
 
   return (
     <article className={`flex flex-col rounded-xl border p-5 text-left shadow-sm ${surfaceStyle} ${className}`}>
-      {/*Header row with category, title, seen badge, and emoji*/}
+      {/*Header row with category, title, seen badge, and SVG category icon*/}
       <div className="flex items-start justify-between gap-3">
         <div>
           {!hideCategory && (
@@ -93,12 +83,8 @@ export function ServiceRequestCard({
               Seen
             </span>
           )}
-          <span
-            className="text-xl leading-none"
-            title={category}
-            aria-label={category}
-          >
-            {emoji}
+          <span title={category} aria-label={category}>
+            <ServiceRequestIcon category={request.category} />
           </span>
         </div>
       </div>

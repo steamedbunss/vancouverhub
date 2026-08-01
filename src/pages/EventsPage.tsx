@@ -18,6 +18,12 @@ export function EventsPage() {
   const [view, setView] = useState<EventView>('upcoming')
   //declaring state to hold events returned from the current API request
   const [events, setEvents] = useState<ApiEvent[]>([])
+  //declaring state to cache the most recently loaded events for each tab
+  const [eventsByView, setEventsByView] = useState<Partial<Record<EventView, ApiEvent[]>>>({})
+  //contentView keeps the last completed layout visible while a new tab loads
+  const [contentView, setContentView] = useState<EventView>('upcoming')
+  //hasLoadedView distinguishes the initial request from a refresh with existing content
+  const [hasLoadedView, setHasLoadedView] = useState(false)
   //declaring state to track whether events are currently loading
   const [isLoading, setIsLoading] = useState(true)
   //declaring state to hold fetch error messages
@@ -47,7 +53,17 @@ const pageHeader = (
         <button
           key={value}
           type="button"
-          onClick={() => setView(value)}
+          onClick={() => {
+            setView(value)
+            setError(null)
+            const cachedEvents = eventsByView[value]
+            //Cached tab data appears immediately while the request refreshes in the background
+            if (cachedEvents) {
+              setEvents(cachedEvents)
+              setContentView(value)
+              setHasLoadedView(true)
+            }
+          }}
           className={`rounded-full px-5 py-2.5 text-base font-semibold transition ${view === value ? 'bg-hub-navy text-white' : 'border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800'}`}
         >
           {label}
@@ -80,7 +96,12 @@ const pageHeader = (
 
     request
       .then((payload) => {
-        if (!cancelled) setEvents(payload)
+        if (!cancelled) {
+          setEvents(payload)
+          setEventsByView((current) => ({ ...current, [view]: payload }))
+          setContentView(view)
+          setHasLoadedView(true)
+        }
       })
       .catch((caughtError) => {
         if (!cancelled) setError(caughtError instanceof Error ? caughtError.message : 'Could not load events.')
@@ -92,26 +113,52 @@ const pageHeader = (
     return () => { cancelled = true }
   }, [requestVersion, token, view])
 
+  //Clear user-specific cached results when the signed-in account changes
+  useEffect(() => {
+    setEventsByView({})
+    setEvents([])
+    setContentView('upcoming')
+    setHasLoadedView(false)
+    setError(null)
+  }, [token])
+
   return (
-    <div className="mx-auto max-w-7xl px-6 py-10">
-      {/*Header shown outside the calendar for past and nearby views*/}
-      {view !== 'upcoming' && pageHeader}
-      {/*Header shown above loading or error states in upcoming view*/}
-      {view === 'upcoming' && (isLoading || error) && pageHeader}
-      <div className={view === 'upcoming' ? '' : 'mt-7'}>
-        {isLoading && <p className="text-sm text-gray-500 dark:text-gray-400">Loading events. Render can take a moment to wake up.</p>}
+    <div className="relative mx-auto max-w-7xl px-6 py-10">
+      {/*Status messages overlay the page so loading never changes content placement*/}
+      <div className="pointer-events-none absolute top-4 left-6 min-h-5" aria-live="polite">
+          {isLoading && <p className="text-sm text-gray-500 transition-opacity dark:text-gray-400">Loading...</p>}
+      </div>
+      <div>
         {error && (
           <div role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
             <p>{error}</p>
             <button type="button" onClick={() => setRequestVersion((version) => version + 1)} className="mt-3 font-semibold underline underline-offset-2">Try again</button>
           </div>
         )}
-        {/*UpcomingEventsCalendar embeds the header inside the calendar layout*/}
-        {!isLoading && !error && view === 'upcoming' && <UpcomingEventsCalendar events={events} header={pageHeader} />}
-        {!isLoading && !error && view === 'past' && <EventDateCalendar events={events} timeframe="past" />}
-        {!isLoading && !error && view === 'nearby' && events.length === 0 && <p className="rounded-lg border border-dashed border-gray-300 p-6 text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">No nearby events were returned.</p>}
-        {!isLoading && !error && events.length > 0 && view === 'nearby' && (
-          <EventsByDateList events={events} />
+        {/*Existing content remains visible while the selected tab refreshes*/}
+        {hasLoadedView && (
+          <div className={`transition-opacity duration-200 ${isLoading ? 'opacity-80' : 'opacity-100'}`} aria-busy={isLoading}>
+            {/*UpcomingEventsCalendar embeds the header inside the calendar layout*/}
+            {contentView === 'upcoming' && <UpcomingEventsCalendar events={events} header={pageHeader} />}
+            {contentView !== 'upcoming' && (
+              <>
+                {/*Match Upcoming's header/calendar footprint so results never jump upward between tabs*/}
+                <div className="lg:h-96 lg:pt-10">
+                  {pageHeader}
+                </div>
+                <div className="mt-8">
+                  {contentView === 'past' && <EventDateCalendar events={events} timeframe="past" />}
+                  {contentView === 'nearby' && events.length === 0 && <p className="rounded-lg border border-dashed border-gray-300 p-6 text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">No nearby events were returned.</p>}
+                  {contentView === 'nearby' && events.length > 0 && <EventsByDateList events={events} />}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+        {!hasLoadedView && (
+          <div className="lg:h-96 lg:pt-10">
+            {pageHeader}
+          </div>
         )}
       </div>
     </div>

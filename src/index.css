@@ -26,10 +26,23 @@
 
 html {
   scroll-behavior: smooth;
+  /* Keep the page width fixed when event tabs contain different amounts of content. */
+  scrollbar-gutter: stable;
 }
 
 body {
   @apply m-0 min-h-screen bg-white font-sans text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-100;
+}
+
+/*number-stepper__input hides browser-native arrows so the shared SVG controls remain consistent*/
+.number-stepper__input {
+  -moz-appearance: textfield;
+}
+
+.number-stepper__input::-webkit-inner-spin-button,
+.number-stepper__input::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
 }
 
 /* Hide page and nested scrollbars while idle, then reveal them during scrolling. */

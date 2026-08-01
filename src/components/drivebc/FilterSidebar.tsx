@@ -69,7 +69,7 @@ export function FilterSidebar({
               onChange={(event) => onNexusChange(event.target.checked)}
               className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
             />
-            NEXUS wait times
+            Border Wait Times
           </label>
         )}
       </div>
