@@ -37,6 +37,21 @@ function statusLabel(status: string) {
   }
 }//statusLabel
 
+//formatUpdatedAt turns the API sync timestamp into a readable local date and time
+function formatUpdatedAt(value: string | null | undefined) {
+  if (!value) return 'Unavailable'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Unavailable'
+
+  return new Intl.DateTimeFormat('en-CA', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date)
+}//formatUpdatedAt
+
 //EvacuationAlertIcon is a yellow circle with white exclamation for Evacuation Alert
 export function EvacuationAlertIcon({ className = '' }: { className?: string }) {
   return (
@@ -76,11 +91,16 @@ export function WildfireCard({ fire, evacuations = [] }: WildfireCardProps) {
   const hasAlert = evacuations.some((notice) => notice.status === 'Alert')
   const sqMeters = fire.sizeHectares !== null ? Math.round(fire.sizeHectares * 10000) : null
   const label = statusLabel(fire.status)
-  const subtitle = fire.geographicDescription ?? fire.fireNumber
-  //showSubtitle hides redundant subtitle when it matches the incident name
+  //Resolve nullable API text once so incomplete wildfire records still render safely
+  const incidentName = fire.incidentName?.trim() ?? ''
+  const fireNumber = fire.fireNumber?.trim() ?? ''
+  const geographicDescription = fire.geographicDescription?.trim() ?? ''
+  const title = incidentName || geographicDescription || fireNumber || 'Unnamed wildfire'
+  const subtitle = geographicDescription || fireNumber
+  //showSubtitle hides redundant subtitle when it matches the resolved card title
   const showSubtitle =
     Boolean(subtitle) &&
-    subtitle.trim().toLowerCase() !== fire.incidentName.trim().toLowerCase()
+    subtitle.toLowerCase() !== title.toLowerCase()
 
   return (
     <article className={`rounded-2xl p-5 transition-all duration-300 ease-in-out hover:scale-120 hover:shadow-xl ${themedCard}`}>
@@ -88,7 +108,7 @@ export function WildfireCard({ fire, evacuations = [] }: WildfireCardProps) {
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-bold">{fire.incidentName}</h3>
+            <h3 className="text-lg font-bold">{title}</h3>
             <span
               className={`inline-block h-3.5 w-3.5 shrink-0 rounded-full border border-black/40 dark:border-white/40 ${statusDotClass(fire.status)}`}
               title={label}
@@ -110,16 +130,17 @@ export function WildfireCard({ fire, evacuations = [] }: WildfireCardProps) {
           <span className="shrink-0 text-sm font-bold">{fire.distanceKm.toFixed(1)} km</span>
         )}
       </div>
-      {/*Size and cause metadata row*/}
-      <div className={`mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm ${themedCardMuted}`}>
+      {/*Uniform metadata rows keep long size values from moving the cause*/}
+      <div className={`mt-4 space-y-2 text-sm ${themedCardMuted}`}>
         {fire.sizeHectares !== null && sqMeters !== null && (
-          <span>
+          <p>
             {fire.sizeHectares.toLocaleString()} hectares ({sqMeters.toLocaleString()} m²)
-          </span>
+          </p>
         )}
         {fire.cause && (
-          <span className="font-semibold text-gray-900 dark:text-white">Cause: {fire.cause}</span>
+          <p className="font-semibold text-gray-900 dark:text-white">Cause: {fire.cause}</p>
         )}
+        <p>Updated: {formatUpdatedAt(fire.lastSyncedAt)}</p>
       </div>
       {fire.fireUrl && (
         <a

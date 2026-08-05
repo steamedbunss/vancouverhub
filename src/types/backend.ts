@@ -111,7 +111,7 @@ export interface ApiAqhi {
 export interface ApiWildfire {
   id: number
   fireNumber: string
-  incidentName: string
+  incidentName: string | null
   geographicDescription: string | null
   neighbourhood: string | null
   latitude: number

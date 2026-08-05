@@ -38,21 +38,34 @@ const GUEST_WILDFIRE_LIMIT = DEFAULT_WILDFIRE_CARD_COUNT
 
 //WildfireFilter selects which wildfires appear in the grid
 type WildfireFilter =
-  | 'all'
   | 'out-of-control'
   | 'under-control'
   | 'being-held'
+  | 'unknown'
   | 'evacuation-order'
   | 'evacuation-alert'
+  | 'noteworthy'
 
-//WILDFIRE_FILTERS lists the dropdown options for filtering the wildfire grid
-const WILDFIRE_FILTERS: Array<{ value: WildfireFilter; label: string }> = [
-  { value: 'all', label: 'All active wildfires' },
-  { value: 'out-of-control', label: 'Out of control' },
-  { value: 'under-control', label: 'Under control' },
-  { value: 'being-held', label: 'Being held' },
-  { value: 'evacuation-order', label: 'Evacuation order' },
-  { value: 'evacuation-alert', label: 'Evacuation alert' },
+//WildfireSort selects the ordering applied after status filters
+type WildfireSort =
+  | 'distance-nearest'
+  | 'size-largest'
+  | 'size-smallest'
+  | 'updated-newest'
+  | 'updated-oldest'
+  | 'discovered-newest'
+  | 'discovered-oldest'
+  | 'name-az'
+
+const WILDFIRE_SORTS: Array<{ value: WildfireSort; label: string }> = [
+  { value: 'distance-nearest', label: 'Distance: nearest' },
+  { value: 'size-largest', label: 'Size: largest' },
+  { value: 'size-smallest', label: 'Size: smallest' },
+  { value: 'updated-newest', label: 'Updated: newest' },
+  { value: 'updated-oldest', label: 'Updated: oldest' },
+  { value: 'discovered-newest', label: 'Discovered: newest' },
+  { value: 'discovered-oldest', label: 'Discovered: oldest' },
+  { value: 'name-az', label: 'Name: A to Z' },
 ]
 
 export function EnvironmentPage() {
@@ -66,8 +79,9 @@ export function EnvironmentPage() {
   const [cardCount, setCardCount] = useState(DEFAULT_WILDFIRE_CARD_COUNT)
   //declaring state for whether signed in users chose to show all wildfires
   const [showAllWildfires, setShowAllWildfires] = useState(false)
-  //declaring state for the active wildfire status or evacuation filter
-  const [wildfireFilter, setWildfireFilter] = useState<WildfireFilter>('all')
+  //declaring state for checkbox-like status filters and result ordering
+  const [wildfireFilters, setWildfireFilters] = useState<WildfireFilter[]>([])
+  const [wildfireSort, setWildfireSort] = useState<WildfireSort>('distance-nearest')
 
   //This function changes the number of visible wildfire cards within its bounds
   function stepCardCount(direction: 1 | -1) {
@@ -75,6 +89,22 @@ export function EnvironmentPage() {
     setShowAllWildfires(false)
     setCardCount((currentCount) => Math.min(maximum, Math.max(1, currentCount + direction)))
   }//stepCardCount
+
+  //This function toggles one visual filter chip without affecting other selections
+  function toggleWildfireFilter(filter: WildfireFilter) {
+    setWildfireFilters((current) => current.includes(filter)
+      ? current.filter((item) => item !== filter)
+      : [...current, filter])
+  }//toggleWildfireFilter
+
+  //This function gives selected filter chips a distinct filled background
+  function wildfireFilterClass(filter: WildfireFilter) {
+    return `inline-flex items-center gap-2 rounded-full border px-3 py-2 transition ${
+      wildfireFilters.includes(filter)
+        ? 'border-black bg-hub-navy text-white dark:border-sky-300 dark:bg-sky-300 dark:text-gray-950'
+        : 'border-black hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800'
+    }`
+  }//wildfireFilterClass
 
   //This useEffect runs when location or token changes
   //It loads active wildfires, evacuation notices, and optional signed in AQHI and fire weather
@@ -139,30 +169,51 @@ export function EnvironmentPage() {
   //safeCardCount clamps cardCount between 1 and the allowed maximum
   const safeCardCount = Math.min(Math.max(cardCount, 1), Math.max(inputMaximumCardCount, 1))
 
-  //filteredFires applies the selected wildfire status or evacuation filter
+  //filteredFires applies any selected status, evacuation, or noteworthy filters
   const filteredFires = fires.filter((fire) => {
+    if (wildfireFilters.length === 0) return true
     const evacuations = data.evacuations.get(fire.fireNumber) ?? []
+    const status = fire.status.toLowerCase()
+    const knownStatuses = ['out of control', 'under control', 'being held']
 
-    switch (wildfireFilter) {
-      case 'out-of-control':
-        return fire.status.toLowerCase() === 'out of control'
-      case 'under-control':
-        return fire.status.toLowerCase() === 'under control'
-      case 'being-held':
-        return fire.status.toLowerCase() === 'being held'
-      case 'evacuation-order':
-        return evacuations.some((notice) => notice.status === 'Order')
-      case 'evacuation-alert':
-        return evacuations.some((notice) => notice.status === 'Alert')
-      default:
-        return true
+    return wildfireFilters.some((filter) => {
+      switch (filter) {
+        case 'out-of-control': return status === 'out of control'
+        case 'under-control': return status === 'under control'
+        case 'being-held': return status === 'being held'
+        case 'unknown': return !knownStatuses.includes(status)
+        case 'evacuation-order': return evacuations.some((notice) => notice.status === 'Order')
+        case 'evacuation-alert': return evacuations.some((notice) => notice.status === 'Alert')
+        case 'noteworthy': return fire.fireOfNote
+      }
+    })
+  })
+
+  //sortedFires orders the filtered set before the card limit is applied
+  const sortedFires = [...filteredFires].sort((first, second) => {
+    const firstUpdated = Date.parse(first.lastSyncedAt)
+    const secondUpdated = Date.parse(second.lastSyncedAt)
+    const firstDiscovered = first.ignitionDate ? Date.parse(first.ignitionDate) : Number.NaN
+    const secondDiscovered = second.ignitionDate ? Date.parse(second.ignitionDate) : Number.NaN
+    const firstName = first.incidentName?.trim() || first.geographicDescription?.trim() || first.fireNumber
+    const secondName = second.incidentName?.trim() || second.geographicDescription?.trim() || second.fireNumber
+
+    switch (wildfireSort) {
+      case 'size-largest': return (second.sizeHectares ?? -1) - (first.sizeHectares ?? -1)
+      case 'size-smallest': return (first.sizeHectares ?? Number.MAX_VALUE) - (second.sizeHectares ?? Number.MAX_VALUE)
+      case 'updated-newest': return (Number.isFinite(secondUpdated) ? secondUpdated : 0) - (Number.isFinite(firstUpdated) ? firstUpdated : 0)
+      case 'updated-oldest': return (Number.isFinite(firstUpdated) ? firstUpdated : Number.MAX_VALUE) - (Number.isFinite(secondUpdated) ? secondUpdated : Number.MAX_VALUE)
+      case 'discovered-newest': return (Number.isFinite(secondDiscovered) ? secondDiscovered : 0) - (Number.isFinite(firstDiscovered) ? firstDiscovered : 0)
+      case 'discovered-oldest': return (Number.isFinite(firstDiscovered) ? firstDiscovered : Number.MAX_VALUE) - (Number.isFinite(secondDiscovered) ? secondDiscovered : Number.MAX_VALUE)
+      case 'name-az': return firstName.localeCompare(secondName)
+      default: return first.distanceKm - second.distanceKm
     }
   })
 
   //visibleFires slices filtered results for guests or shows all when showAllWildfires is true
   const visibleFires = showAllWildfires && token
-    ? filteredFires
-    : filteredFires.slice(0, safeCardCount)
+    ? sortedFires
+    : sortedFires.slice(0, safeCardCount)
   //hasMoreForGuest is true when a guest has additional wildfires beyond the guest limit
   const hasMoreForGuest = !token && filteredFires.length > visibleFires.length
 
@@ -231,58 +282,63 @@ export function EnvironmentPage() {
             </label>
 
             <label className="flex min-w-52 flex-col gap-1.5 text-sm font-semibold text-gray-700 dark:text-gray-200">
-              Filter wildfires
+              Sort wildfires
               <select
-                value={wildfireFilter}
-                onChange={(event) => setWildfireFilter(event.target.value as WildfireFilter)}
+                value={wildfireSort}
+                onChange={(event) => setWildfireSort(event.target.value as WildfireSort)}
                 className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 outline-none transition focus:border-hub-navy focus:ring-2 focus:ring-hub-navy/15 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
               >
-                {WILDFIRE_FILTERS.map((filter) => (
-                  <option key={filter.value} value={filter.value}>{filter.label}</option>
+                {WILDFIRE_SORTS.map((sort) => (
+                  <option key={sort.value} value={sort.value}>{sort.label}</option>
                 ))}
               </select>
             </label>
 
             <p className="pb-2 text-sm whitespace-nowrap text-gray-500 sm:col-span-2 lg:col-span-1 dark:text-gray-400">
               Showing <strong className="inline-block w-7 text-right font-bold tabular-nums text-gray-700 dark:text-gray-200">{visibleFires.length}</strong> of{' '}
-              <strong className="inline-block w-7 text-right font-bold tabular-nums text-gray-700 dark:text-gray-200">{fires.length}</strong> wildfires
+              <strong className="inline-block w-7 text-right font-bold tabular-nums text-gray-700 dark:text-gray-200">{filteredFires.length}</strong> wildfires
             </p>
           </div>
         </div>
 
-        {/*Color and icon legend for wildfire status and evacuation levels*/}
+        {/*Color and icon chips act as checkbox-like multi-select wildfire filters*/}
         <div
-          className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-semibold text-gray-700 dark:text-gray-200"
-          aria-label="Wildfire status legend"
+          className="mt-5 flex flex-wrap items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200"
+          aria-label="Filter wildfires"
         >
-          <span className="inline-flex items-center gap-2">
+          <button type="button" aria-pressed={wildfireFilters.includes('under-control')} onClick={() => toggleWildfireFilter('under-control')} className={wildfireFilterClass('under-control')}>
             <span className="h-3.5 w-3.5 rounded-full bg-lime-400" aria-hidden />
             Under Control
-          </span>
-          <span className="inline-flex items-center gap-2">
+          </button>
+          <button type="button" aria-pressed={wildfireFilters.includes('being-held')} onClick={() => toggleWildfireFilter('being-held')} className={wildfireFilterClass('being-held')}>
             <span className="h-3.5 w-3.5 rounded-full bg-yellow-300" aria-hidden />
             Being Held
-          </span>
-          <span className="inline-flex items-center gap-2">
+          </button>
+          <button type="button" aria-pressed={wildfireFilters.includes('out-of-control')} onClick={() => toggleWildfireFilter('out-of-control')} className={wildfireFilterClass('out-of-control')}>
             <span className="h-3.5 w-3.5 rounded-full bg-red-600" aria-hidden />
             Out of Control
-          </span>
-          <span className="inline-flex items-center gap-2">
+          </button>
+          <button type="button" aria-pressed={wildfireFilters.includes('unknown')} onClick={() => toggleWildfireFilter('unknown')} className={wildfireFilterClass('unknown')}>
             <span className="h-3.5 w-3.5 rounded-full bg-gray-400" aria-hidden />
             Unknown
-          </span>
-          <span className="inline-flex items-center gap-2">
+          </button>
+          <button type="button" aria-pressed={wildfireFilters.includes('evacuation-alert')} onClick={() => toggleWildfireFilter('evacuation-alert')} className={wildfireFilterClass('evacuation-alert')}>
             <EvacuationAlertIcon className="h-5 w-5 text-[11px]" />
             Evacuation Alert
-          </span>
-          <span className="inline-flex items-center gap-2">
+          </button>
+          <button type="button" aria-pressed={wildfireFilters.includes('evacuation-order')} onClick={() => toggleWildfireFilter('evacuation-order')} className={wildfireFilterClass('evacuation-order')}>
             <EvacuationOrderIcon className="h-5 w-5 [&_span]:text-[10px]" />
             Evacuation Order
-          </span>
-          <span className="inline-flex items-center gap-2">
+          </button>
+          <button type="button" aria-pressed={wildfireFilters.includes('noteworthy')} onClick={() => toggleWildfireFilter('noteworthy')} className={wildfireFilterClass('noteworthy')}>
             <span className="text-base leading-none" aria-hidden>🔥</span>
             Noteworthy
-          </span>
+          </button>
+          {wildfireFilters.length > 0 && (
+            <button type="button" onClick={() => setWildfireFilters([])} className="rounded-full px-3 py-2 text-gray-500 underline underline-offset-2 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+              Clear filters
+            </button>
+          )}
         </div>
 
         {/*This map iterates through each visible wildfire and renders a WildfireCard*/}

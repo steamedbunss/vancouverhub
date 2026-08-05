@@ -1,7 +1,7 @@
 //AuthPage.tsx handles login, registration, and guest access for Vancouver Hub
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LockKeyhole, Mail, UserRound } from 'lucide-react'
+import { Eye, EyeClosed, Mail, UserRound } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { GUEST_ACCESS_STORAGE_KEY } from '../components/auth/LandingRedirect'
 import { resendConfirmation } from '../lib/api/auth'
@@ -19,6 +19,7 @@ export function AuthPage({ mode }: AuthPageProps) {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordVisible, setPasswordVisible] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [registrationSubmitted, setRegistrationSubmitted] = useState(false)
@@ -159,20 +160,31 @@ export function AuthPage({ mode }: AuthPageProps) {
                 <Mail aria-hidden="true" className="absolute right-0 bottom-2 h-5 w-5 text-slate-800" />
               </label>
             )}
-            <label className="relative block border-b-2 border-slate-900 pb-2 text-sm font-medium text-slate-800">
-              <span className="sr-only">Password</span>
+            <div className="relative border-b-2 border-slate-900 pb-2 text-sm font-medium text-slate-800">
+              <label htmlFor={`${mode}-password`} className="sr-only">Password</label>
               <input
+                id={`${mode}-password`}
                 required
                 {...(!isLogin ? { minLength: 8 } : {})}
-                type="password"
+                type={passwordVisible ? 'text' : 'password'}
                 autoComplete={isLogin ? 'current-password' : 'new-password'}
                 placeholder="Password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="w-full pr-8 text-base outline-none placeholder:text-slate-500"
+                className="w-full pr-10 text-base outline-none placeholder:text-slate-500"
               />
-              <LockKeyhole aria-hidden="true" className="absolute right-0 bottom-2 h-5 w-5 text-slate-800" />
-            </label>
+              <button
+                type="button"
+                onClick={() => setPasswordVisible((visible) => !visible)}
+                aria-label={passwordVisible ? 'Hide password' : 'Show password'}
+                aria-pressed={passwordVisible}
+                className="absolute right-0 bottom-1 rounded p-1 text-slate-800 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+              >
+                {passwordVisible
+                  ? <Eye aria-hidden="true" className="h-5 w-5" />
+                  : <EyeClosed aria-hidden="true" className="h-5 w-5" />}
+              </button>
+            </div>
           </div>
 
           {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
