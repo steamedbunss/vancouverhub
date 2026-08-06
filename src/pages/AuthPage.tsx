@@ -178,7 +178,7 @@ export function AuthPage({ mode }: AuthPageProps) {
                 onClick={() => setPasswordVisible((visible) => !visible)}
                 aria-label={passwordVisible ? 'Hide password' : 'Show password'}
                 aria-pressed={passwordVisible}
-                className="absolute right-0 bottom-1 rounded p-1 text-slate-800 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+                className="absolute -right-1 bottom-1 rounded p-1 text-slate-800 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
               >
                 {passwordVisible
                   ? <Eye aria-hidden="true" className="h-5 w-5" />
