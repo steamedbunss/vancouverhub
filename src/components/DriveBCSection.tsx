@@ -142,7 +142,7 @@ export function DriveBCSection() {
             Showing <strong className="dark:text-white">{displayedEventCount}</strong> of {events.length} active events
           </div>
 
-          <div className="relative z-20 flex items-center gap-2 text-xs">
+        <div data-onboarding-target="tour-traffic-controls" className="relative z-20 flex items-center gap-2 text-xs">
             {/*Collapse all sits left of sort controls; hidden in map view*/}
             <button
               type="button"

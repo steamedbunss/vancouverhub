@@ -27,6 +27,8 @@ export function useElasticSectionSnap() {
     const scrollContainer = containerRef.current as HTMLDivElement
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    //Mobile and zoomed-in layouts use natural scrolling instead of section snapping.
+    const narrowViewport = window.matchMedia('(max-width: 767px)')
     let settleTimer: number | undefined
     let frameId: number | undefined
     let isAnimating = false
@@ -109,6 +111,14 @@ export function useElasticSectionSnap() {
     }//snapToNearestAnchor
 
     function handleScroll() {
+      if (document.documentElement.classList.contains('onboarding-tour-active')) {
+        if (settleTimer !== undefined) window.clearTimeout(settleTimer)
+        settleTimer = undefined
+        cancelAnimation()
+        lastScrollTop = scrollContainer.scrollTop
+        return
+      }
+      if (narrowViewport.matches) return
       if (isAnimating) return
       const currentScrollTop = scrollContainer.scrollTop
       if (Math.abs(currentScrollTop - lastScrollTop) > 0.5) {
@@ -123,10 +133,28 @@ export function useElasticSectionSnap() {
       cancelAnimation()
     }//handleUserScrollStart
 
+    function handleViewportChange() {
+      if (narrowViewport.matches) {
+        if (settleTimer !== undefined) window.clearTimeout(settleTimer)
+        settleTimer = undefined
+        cancelAnimation()
+      }
+    }//handleViewportChange
+
+    const tourObserver = new MutationObserver(() => {
+      if (!document.documentElement.classList.contains('onboarding-tour-active')) return
+      if (settleTimer !== undefined) window.clearTimeout(settleTimer)
+      settleTimer = undefined
+      cancelAnimation()
+      lastScrollTop = scrollContainer.scrollTop
+    })
+    tourObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+
     scrollContainer.addEventListener('scroll', handleScroll, { passive: true })
     scrollContainer.addEventListener('wheel', handleUserScrollStart, { passive: true })
     scrollContainer.addEventListener('touchstart', handleUserScrollStart, { passive: true })
     scrollContainer.addEventListener('pointerdown', handleUserScrollStart, { passive: true })
+    narrowViewport.addEventListener('change', handleViewportChange)
 
     return () => {
       if (settleTimer !== undefined) window.clearTimeout(settleTimer)
@@ -135,6 +163,8 @@ export function useElasticSectionSnap() {
       scrollContainer.removeEventListener('wheel', handleUserScrollStart)
       scrollContainer.removeEventListener('touchstart', handleUserScrollStart)
       scrollContainer.removeEventListener('pointerdown', handleUserScrollStart)
+      narrowViewport.removeEventListener('change', handleViewportChange)
+      tourObserver.disconnect()
     }
   }, [])
 

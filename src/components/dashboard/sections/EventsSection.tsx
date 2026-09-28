@@ -94,7 +94,7 @@ export function EventsSection({ compact = false }: { compact?: boolean }) {
           <Link to="/events" className="text-base font-bold tracking-[0.2em] uppercase">
             <RainbowText>See all →</RainbowText>
           </Link>
-          <h2 className="dashboard-green-cycle mt-5 text-8xl font-black leading-[0.85] tracking-tighter md:text-[9rem]">
+          <h2 data-onboarding-target={compact ? 'tour-events' : undefined} className="dashboard-green-cycle mx-auto mt-5 w-fit text-center text-8xl font-black leading-[0.85] tracking-tighter md:text-[9rem]">
             Events
           </h2>
           <p className="dashboard-green-cycle mt-5 text-xl font-semibold">

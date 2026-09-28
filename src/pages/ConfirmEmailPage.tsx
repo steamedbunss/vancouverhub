@@ -23,7 +23,7 @@ export function ConfirmEmailPage() {
 
     void confirmEmailAndSignIn(token)
       .then(() => {
-        navigate('/dashboard', { replace: true })
+        navigate('/', { replace: true })
       })
       .catch(() => {
         setStatus('error')

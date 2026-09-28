@@ -36,6 +36,23 @@ const DEFAULT_WILDFIRE_CARD_COUNT = 9
 //constant limiting how many wildfire cards guest users may view
 const GUEST_WILDFIRE_LIMIT = DEFAULT_WILDFIRE_CARD_COUNT
 
+function EnvironmentCardSkeleton({ title, className = '' }: { title: string; className?: string }) {
+  return (
+    <section aria-label={`Loading ${title.toLowerCase()}`} aria-busy="true" className={`min-h-[24rem] animate-pulse rounded-3xl border border-gray-200 bg-white p-6 shadow-sm md:p-8 dark:border-gray-700 dark:bg-gray-900/50 ${className}`}>
+      <h2 className="text-lg font-black tracking-tight text-gray-800 dark:text-gray-100">{title}</h2>
+      <div className="mt-3 h-4 w-2/3 rounded bg-gray-200 dark:bg-gray-700" />
+      <div className="mt-8 h-16 w-1/2 rounded bg-gray-200 dark:bg-gray-700" />
+      <div className="mt-5 h-3 w-1/3 rounded bg-gray-200 dark:bg-gray-700" />
+      <div className="mt-6 grid grid-cols-2 gap-4 border-t border-gray-200 pt-5 dark:border-gray-700">
+        <div className="h-12 rounded bg-gray-100 dark:bg-gray-800" />
+        <div className="h-12 rounded bg-gray-100 dark:bg-gray-800" />
+        <div className="h-12 rounded bg-gray-100 dark:bg-gray-800" />
+        <div className="h-12 rounded bg-gray-100 dark:bg-gray-800" />
+      </div>
+    </section>
+  )
+}
+
 //WildfireFilter selects which wildfires appear in the grid
 type WildfireFilter =
   | 'out-of-control'
@@ -72,7 +89,13 @@ export function EnvironmentPage() {
   const { token } = useAuth()
   const location = useResolvedLocation()
   //declaring state to hold fetched environment data; null until the first load completes
-  const [data, setData] = useState<EnvironmentData | null>(null)
+  const [data, setData] = useState<EnvironmentData>({
+    aqhi: null,
+    activeFires: [],
+    fireWeather: null,
+    evacuations: new Map(),
+  })
+  const [isDataLoading, setIsDataLoading] = useState(true)
   //declaring state to hold load error messages
   const [error, setError] = useState<string | null>(null)
   //declaring state for how many wildfire cards the user wants visible
@@ -114,6 +137,8 @@ export function EnvironmentPage() {
 
     async function loadEnvironment() {
       setError(null)
+      setIsDataLoading(true)
+      setData({ aqhi: null, activeFires: [], fireWeather: null, evacuations: new Map() })
       try {
         const [activeFires, evacuations] = await Promise.all([
           getActiveWildfires(),
@@ -128,10 +153,12 @@ export function EnvironmentPage() {
 
         if (!cancelled) {
           setData({ aqhi, activeFires, fireWeather, evacuations })
+          setIsDataLoading(false)
         }
       } catch (loadError) {
         if (!cancelled) {
           setError(loadError instanceof Error ? loadError.message : 'Could not load environment information.')
+          setIsDataLoading(false)
         }
       }
     }
@@ -140,16 +167,6 @@ export function EnvironmentPage() {
     return () => { cancelled = true }
   }, [location?.lat, location?.lon, token])
 
-  //If the fetch failed, show an error message and stop rendering the rest
-  if (error) {
-    return <div className="mx-auto max-w-6xl px-6 py-20 text-sm text-red-600">{error}</div>
-  }
-
-  //If data or location is not ready yet, show a loading message
-  if (!data || !location) {
-    return <div className="mx-auto max-w-6xl px-6 py-20 text-gray-500 dark:text-gray-400">Loading environment information...</div>
-  }
-
   //Everyone browses the same province wide active fire data
   //Signed in users may reveal the complete API result, while guests are limited to nine cards
   //Nearby data is kept only for the personal nearest fire summary below
@@ -157,7 +174,7 @@ export function EnvironmentPage() {
   const fires = data.activeFires
     .map((fire) => ({
       ...fire,
-      distanceKm: distanceBetweenKm(location.lat, location.lon, fire.latitude, fire.longitude),
+      distanceKm: location ? distanceBetweenKm(location.lat, location.lon, fire.latitude, fire.longitude) : Number.MAX_SAFE_INTEGER,
     }))
     .sort((first, second) => first.distanceKm - second.distanceKm)
   const wildfireTitle = 'Active wildfires in British Columbia'
@@ -222,18 +239,23 @@ export function EnvironmentPage() {
       {/*Page title and description*/}
       <h1 className="mt-3 text-5xl font-black tracking-tighter md:text-7xl"><RainbowText>Environment</RainbowText></h1>
       <p className="mt-4 max-w-2xl text-lg text-gray-500 dark:text-gray-300">Current weather, air quality, and wildfires for British Columbia.</p>
+      {error && <p role="status" className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {/*Current conditions and air quality cards in a two column grid*/}
       <div className="mt-10 grid gap-6 md:grid-cols-2">
-        {location.weather ? (
-          <CurrentConditionsCard weather={location.weather} />
-        ) : (
-          <section className="h-fit rounded-3xl border border-black bg-white p-6 text-gray-900 shadow-sm md:p-8 dark:border-white dark:bg-gray-950 dark:text-white dark:shadow-[0_0_18px_rgba(255,255,255,0.45)]">
-            <h2 className="text-3xl font-black tracking-tight">Weather unavailable</h2>
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">We could not load weather for your current location.</p>
-          </section>
-        )}
-        {data.aqhi ? <AirQualityCard aqhi={data.aqhi} /> : <AirQualityLoginPrompt />}
+        <div data-onboarding-target="tour-environment-conditions" className="h-fit self-start">
+          {location?.weather ? <CurrentConditionsCard weather={location.weather} /> : !location || !location.error ? (
+            <EnvironmentCardSkeleton title="Current conditions" />
+          ) : (
+            <section className="h-fit rounded-3xl border border-black bg-white p-6 text-gray-900 shadow-sm md:p-8 dark:border-white dark:bg-gray-950 dark:text-white dark:shadow-[0_0_18px_rgba(255,255,255,0.45)]">
+              <h2 className="text-3xl font-black tracking-tight">Weather unavailable</h2>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">We could not load weather for your current location.</p>
+            </section>
+          )}
+        </div>
+        <div data-onboarding-target="tour-air-quality" className="h-fit self-start">
+          {data.aqhi ? <AirQualityCard aqhi={data.aqhi} /> : token && isDataLoading ? <EnvironmentCardSkeleton title="Air quality" /> : <AirQualityLoginPrompt />}
+        </div>
       </div>
 
       {/*Fire weather card for signed in users with nearby station data*/}
@@ -244,7 +266,7 @@ export function EnvironmentPage() {
       )}
 
       {/*Active wildfires section with filters, legend, and card grid*/}
-      <section className="mt-14">
+      <section data-onboarding-target="tour-wildfires" className="mt-14">
         <div className="flex flex-col gap-4 lg:flex-row lg:flex-nowrap lg:items-end lg:justify-between lg:gap-4">
           <h2 className="shrink-0 text-3xl font-black tracking-tight text-gray-900 dark:text-white">{wildfireTitle}</h2>
 

@@ -13,7 +13,7 @@ export function AuthCard({ title, subtitle, children, mode = 'auth' }: AuthCardP
   return (
     <main className="flex min-h-screen items-center justify-center bg-white px-6 py-12">
       <div className={`auth-card auth-card-${mode} flex min-h-[620px] w-full max-w-md flex-col rounded-2xl border border-slate-900 bg-white p-8 shadow-[0_16px_40px_rgba(15,23,42,0.10)] sm:p-10`}>
-        <Link to="/dashboard" className="text-sm font-semibold text-slate-800 hover:underline">
+        <Link to="/" className="text-sm font-semibold text-slate-800 hover:underline">
           Vancouver Hub
         </Link>
         <h1 className="mt-8 text-center text-4xl font-bold tracking-tight text-slate-950">{title}</h1>

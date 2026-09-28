@@ -43,7 +43,7 @@ export function LocationSettings() {
   }, [setDraftLocation, setDraftNeighborhood, token, useCurrentLocation])
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900/50">
+    <section data-onboarding-target="tour-settings-location" className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900/50">
       <h3 className="text-xl font-bold tracking-[0.12em] text-gray-500 uppercase dark:text-gray-300">
         <RainbowText>Your Location</RainbowText>
       </h3>

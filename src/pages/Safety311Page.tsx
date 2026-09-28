@@ -107,7 +107,7 @@ export function Safety311Page() {
 
       {/*Guest prompt when the user is not signed in*/}
       {guest && (
-        <div className="mt-10 rounded-2xl border border-gray-200 bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-900">
+        <div data-onboarding-target="tour-reports-overview" className="mt-10 rounded-2xl border border-gray-200 bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-900">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Sign in to see nearby 311 requests</h2>
           <p className="mt-2 text-gray-500 dark:text-gray-400">Requests are tailored to your saved home location and category preferences.</p>
           <Link to="/login" className="mt-5 inline-flex rounded-lg bg-hub-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-hub-navy-light">Sign in</Link>

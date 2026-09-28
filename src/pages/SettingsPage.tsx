@@ -12,6 +12,7 @@ import {
 import { RainbowText } from '../components/RainbowText'
 import { useAuth } from '../context/AuthContext'
 import { useUserConfig } from '../context/UserConfigContext'
+import { resetOnboardingStatus } from '../components/onboarding/onboardingSteps'
 
 export function SettingsPage() {
   //token indicates whether the user is signed in; appearance settings require auth
@@ -26,6 +27,8 @@ export function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false)
   //declaring state to show success or error feedback after save or discard
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
+  //declaring state to confirm when the tutorial reset has been requested
+  const [tutorialMessage, setTutorialMessage] = useState<string | null>(null)
   //hasChanges is true when either user config or service request prefs have pending edits
   const hasChanges = hasUnsavedChanges || hasUnsavedServiceRequestChanges
 
@@ -60,8 +63,15 @@ export function SettingsPage() {
     setSaveMessage(null)
   }//handleDiscard
 
+  //handleResetTutorial clears the saved onboarding status so the tour can run again
+  function handleResetTutorial() {
+    resetOnboardingStatus()
+    setTutorialMessage('Tutorial reset. It will appear the next time you visit the start page.')
+  }//handleResetTutorial
+
   return (
     <div
+      data-onboarding-target="tour-finish"
       className={`settings-page mx-auto max-w-7xl px-6 py-10 dark:text-gray-100 ${
         token ? 'settings-page--account' : 'settings-page--guest'
       }`}
@@ -130,6 +140,24 @@ export function SettingsPage() {
 
         {/*Right column: dashboard visibility and appearance for signed in users*/}
         <div className="space-y-10 xl:col-span-4">
+          {!token && <section data-onboarding-target="tour-settings-appearance" className="rounded-3xl border border-gray-900 bg-white p-6 text-gray-900 shadow-sm md:p-8 dark:border-white dark:bg-gray-950 dark:text-white">
+            <h2 className="text-xl font-bold tracking-tight">Tutorial</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
+              Review the guided introduction to Vancouver Hub and its personalized features.
+            </p>
+            <button
+              type="button"
+              onClick={handleResetTutorial}
+              className="mt-5 rounded-lg border border-gray-900 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-100 dark:border-white dark:hover:bg-gray-800"
+            >
+              Reset Tutorial
+            </button>
+            {tutorialMessage && (
+              <p role="status" className="mt-3 text-sm text-teal-700 dark:text-teal-300">
+                {tutorialMessage}
+              </p>
+            )}
+          </section>}
           <DashboardVisibility />
           {token && <AppearancePreferences />}
         </div>

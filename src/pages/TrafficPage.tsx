@@ -13,8 +13,10 @@ export function TrafficPage() {
         </h1>
       </div>
       {/*DriveBCSection handles Open511 event fetching, filters, list view, and map view*/}
-      <div className="mt-8">
-        <DriveBCSection />
+      <div data-onboarding-target="tour-traffic-cameras" className="mt-8">
+        <div data-onboarding-target="tour-traffic-controls">
+          <DriveBCSection />
+        </div>
       </div>
     </div>
   )

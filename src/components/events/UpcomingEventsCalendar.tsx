@@ -138,7 +138,7 @@ export function UpcomingEventsCalendar({ events, header }: { events: ApiEvent[];
 
       {/*Mobile date summary shown below the calendar on small screens*/}
       <SelectedDateSummary label={selectedDateLabel} count={visibleEvents.length} className="mt-10 lg:hidden" />
-      {visibleEvents.length > 0 ? <SnakeEventTimeline events={visibleEvents} /> : <p className="mt-4 rounded-xl border border-dashed border-gray-300 p-6 text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">No events are scheduled for this date.</p>}
+      {visibleEvents.length > 0 ? <SnakeEventTimeline events={visibleEvents} /> : <p data-onboarding-target="tour-events-content" className="mt-4 rounded-xl border border-dashed border-gray-300 p-6 text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">No events are scheduled for this date.</p>}
     </div>
   )
 }//UpcomingEventsCalendar
@@ -170,7 +170,9 @@ function SnakeEventTimeline({ events }: { events: ApiEvent[] }) {
 
           return (
             <div key={event.id} className="relative" style={{ gridColumn: column, gridRow: row + 1 }}>
-              <EventListCard event={event} variant="timeline" />
+              <div data-onboarding-target={index === 0 ? 'tour-events-content' : undefined}>
+                <EventListCard event={event} variant="timeline" />
+              </div>
               {!isLastEvent && (
                 <FlowIndicator
                   direction={direction}

@@ -134,7 +134,7 @@ export function TrafficSection({ compact = false }: { compact?: boolean }) {
             >
               <RainbowText>See all →</RainbowText>
             </Link>
-            <h2 className={`dashboard-blue-cycle ${compact ? 'mt-3 text-8xl font-black tracking-tighter md:text-9xl md:leading-[0.9]' : `mt-3 ${sectionTitle}`}`}>
+            <h2 data-onboarding-target={compact ? 'tour-traffic' : undefined} className={`dashboard-blue-cycle ${compact ? 'mt-3 w-fit text-8xl font-black tracking-tighter md:text-9xl md:leading-[0.9]' : `mt-3 ${sectionTitle}`}`}>
               Traffic
             </h2>
             <p className={`dashboard-blue-cycle mt-5 ${compact ? 'text-base md:text-lg' : 'text-sm'}`}>

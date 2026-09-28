@@ -57,21 +57,21 @@ export function DashboardPage() {
     : location.neighbourhood ?? 'Location unavailable'
 
   return (
-    <div ref={dashboardRef} className="h-full overflow-y-auto overscroll-contain bg-white dark:bg-gray-950">
+    <div ref={dashboardRef} data-dashboard-scroll-container className="h-full overflow-y-auto overscroll-contain bg-white dark:bg-gray-950">
       {/*Hero header with greeting, location, date, and optional weather and gas widgets*/}
       <header data-elastic-snap className="flex min-h-full flex-col items-center justify-center px-6 py-16 md:py-24">
         <div className="-translate-y-8 text-center md:-translate-y-12">
-          <h1 className="text-6xl font-black tracking-tighter sm:text-7xl md:text-9xl md:leading-[0.9]">
+          <h1 data-onboarding-target="tour-greeting" className="text-6xl font-black tracking-tighter sm:text-7xl md:text-9xl md:leading-[0.9]">
           <RainbowText>{headingGreeting}, {displayName}</RainbowText>
           </h1>
-          <p className="mt-5 text-base text-gray-500 sm:text-lg md:mt-6 md:text-xl dark:text-gray-300">
+          <p data-onboarding-target="tour-location" className="mt-5 text-base text-gray-500 sm:text-lg md:mt-6 md:text-xl dark:text-gray-300">
             {locationLabel} · {dateLabel}
           </p>
           {/*Weather and gas sections appear when enabled in user settings*/}
           {(showWeather || showGas) && (
             <div className={`mx-auto mt-24 grid w-full max-w-[90rem] items-start gap-16 text-left md:mt-32 ${showWeather && showGas ? 'md:grid-cols-2 md:gap-32' : 'md:grid-cols-1'}`}>
               {showWeather && (
-                <div className={showGas ? 'w-full max-w-lg md:justify-self-start' : 'justify-self-center'}>
+                <div data-onboarding-target="tour-weather" className={showGas ? 'w-full max-w-lg md:justify-self-start' : 'justify-self-center'}>
                   <CompactWeather />
                 </div>
               )}

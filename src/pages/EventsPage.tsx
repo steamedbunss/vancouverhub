@@ -45,10 +45,10 @@ export function EventsPage() {
 //pageHeader is shared JSX for the title, subtitle, and view toggle buttons
 const pageHeader = (
   <>
-    <h1 className="text-7xl font-black tracking-tight md:text-8xl"><RainbowText>Events</RainbowText></h1>
+    <h1 data-onboarding-target="tour-events-overview" className="w-fit text-7xl font-black tracking-tight md:text-8xl"><RainbowText>Events</RainbowText></h1>
     <p className="mt-3 text-lg text-gray-600 dark:text-gray-300">Upcoming events around Vancouver.</p>
     {/*View toggle buttons; the active view gets the navy background*/}
-    <div className="mt-8 flex flex-wrap gap-3">
+    <div data-onboarding-target="tour-events-filters" className="mt-8 flex w-fit flex-wrap gap-3">
       {views.map(({ value, label }) => (
         <button
           key={value}

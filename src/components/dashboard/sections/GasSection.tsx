@@ -156,7 +156,7 @@ export function GasSection({ featured = false, compact = false }: { featured?: b
   const isPaging = loading && stations.length > 0 && stationsFuelType === fuelType
 
   return (
-    <section className={compact ? 'w-full max-w-2xl min-w-0' : featured ? 'mx-auto w-fit max-w-full py-8 md:py-10' : 'py-8 md:py-10'}>
+    <section data-onboarding-target={compact ? 'tour-gas' : undefined} className={compact ? 'w-full max-w-2xl min-w-0' : featured ? 'mx-auto w-fit max-w-full py-8 md:py-10' : 'py-8 md:py-10'}>
       {/*Section title; size varies by featured and compact props*/}
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
         <h2 className={compact ? 'text-5xl font-black tracking-tighter text-gray-900 md:text-6xl md:leading-[0.9] dark:text-white' : featured ? 'text-6xl font-black tracking-tighter text-gray-900 md:text-7xl md:leading-[0.9] dark:text-white' : 'text-5xl font-black tracking-tighter text-gray-900 md:text-6xl md:leading-[0.9] dark:text-white'}>

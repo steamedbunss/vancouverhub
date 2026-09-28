@@ -83,7 +83,7 @@ export const ServiceRequestPreferences = forwardRef<
   //If the user is not signed in, show a sign-in prompt instead of checkboxes
   if (!token) {
     return (
-      <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900/50">
+      <section data-onboarding-target="tour-settings-reports" className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900/50">
         <h2 className="text-xl font-bold tracking-[0.12em] text-gray-500 uppercase dark:text-gray-400">
           <RainbowText>311 preferences</RainbowText>
         </h2>
@@ -107,7 +107,7 @@ export const ServiceRequestPreferences = forwardRef<
   }//toggleCategory
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900/50">
+    <section data-onboarding-target="tour-settings-reports" className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900/50">
       <h2 className="text-xl font-bold tracking-[0.12em] text-gray-500 uppercase dark:text-gray-400">
         <RainbowText>311 preferences</RainbowText>
       </h2>

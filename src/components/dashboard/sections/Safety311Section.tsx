@@ -118,7 +118,7 @@ export function Safety311Section() {
         >
           <RainbowText>See all →</RainbowText>
         </Link>
-        <h2 className="dashboard-red-cycle mt-3 pb-2 text-7xl leading-none font-black tracking-tighter md:text-8xl md:leading-none">
+        <h2 data-onboarding-target="tour-reports" className="dashboard-red-cycle mx-auto mt-3 w-fit pb-2 text-center text-7xl leading-none font-black tracking-tighter md:text-8xl md:leading-none">
           Neighbour Reports
         </h2>
       </div>

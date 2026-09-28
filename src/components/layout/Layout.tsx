@@ -8,8 +8,8 @@ import { Navbar } from './Navbar'
 //Layout wraps every page with providers, the navbar, and the routed main content
 export function Layout() {
   const { pathname } = useLocation()
-  //isDashboard is true on the dashboard route which uses a fixed viewport height
-  const isDashboard = pathname === '/dashboard'
+  //isDashboard is true on the root route which uses a fixed viewport height
+  const isDashboard = pathname === '/'
 
   //Show each page or nested scrollbar only while that surface is actively scrolling.
   useEffect(() => {

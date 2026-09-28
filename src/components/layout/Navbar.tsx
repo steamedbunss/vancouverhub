@@ -47,7 +47,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-950/95">
-      <div className="flex h-16 w-full items-center justify-center px-4 sm:px-6">
+      <div data-onboarding-target="tour-navigation" className="flex h-16 w-full items-center justify-center px-4 sm:px-6">
         <div className="flex w-fit max-w-full items-center gap-3 sm:gap-5 lg:gap-8">
           {/*Logo link back to the home page*/}
           <Link to="/" className="flex shrink-0 items-center gap-2 sm:gap-3">
