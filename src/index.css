@@ -142,14 +142,30 @@ body {
   animation: rainbow-flow var(--gradient-speed) linear infinite;
 }
 
-.rainbow-text-face,
-.rainbow-text-glow {
-  background-image: var(--user-gradient);
+.rainbow-text {
+  display: inline;
+  filter:
+    drop-shadow(0 0 10px rgb(168 85 247 / 0.45))
+    drop-shadow(0 0 22px rgb(56 189 248 / 0.28));
 }
 
-.rainbow-text-glow {
-  opacity: 0.88;
-  filter: blur(28px);
+.rainbow-text-face {
+  display: inline;
+  background-image: var(--user-gradient);
+  background-position: 0% 50%;
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.rainbow-text-face::selection {
+  color: #0f172a;
+  -webkit-text-fill-color: #0f172a;
+  background: rgb(148 163 184 / 0.4);
 }
 
 @keyframes dashboard-palette-flow {
@@ -234,8 +250,8 @@ body {
     drop-shadow(0 0 32px rgb(185 28 28 / 0.48));
 }
 
-.gradients-disabled .rainbow-text-glow {
-  display: none;
+.gradients-disabled .rainbow-text {
+  filter: none;
 }
 
 .gradients-disabled .rainbow-text-face,
@@ -245,13 +261,15 @@ body {
 .gradients-disabled .dashboard-red-cycle {
   color: currentColor;
   background-image: none;
+  background-clip: unset;
+  -webkit-background-clip: unset;
   filter: none;
   animation: none;
   -webkit-text-fill-color: currentColor;
 }
 
-.guest-static-colors .rainbow-text-glow {
-  display: none;
+.guest-static-colors .rainbow-text {
+  filter: none;
 }
 
 .guest-static-colors .rainbow-text-face,
