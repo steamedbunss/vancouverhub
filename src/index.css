@@ -313,7 +313,6 @@ body {
   -webkit-text-fill-color: transparent !important;
 }
 
-
 .nav-tabs-scroll {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -383,6 +382,25 @@ body {
 }
 
 .settings-page :not(h1, h1 *, h2, h2 *, h3, h3 *, h4, h4 *, h5, h5 *, h6, h6 *) {
+  color: #fff !important;
+}
+
+/* Keep the greeting animation menu readable despite the settings-wide white text override. */
+.settings-page .greeting-animation-select summary,
+.settings-page .greeting-animation-select summary *,
+.settings-page .greeting-animation-select [role='listbox'],
+.settings-page .greeting-animation-select [role='listbox'] *,
+.settings-page .greeting-animation-select [role='option'],
+.settings-page .greeting-animation-select [role='option'] * {
+  color: #0f172a !important;
+}
+
+.dark .settings-page .greeting-animation-select summary,
+.dark .settings-page .greeting-animation-select summary *,
+.dark .settings-page .greeting-animation-select [role='listbox'],
+.dark .settings-page .greeting-animation-select [role='listbox'] *,
+.dark .settings-page .greeting-animation-select [role='option'],
+.dark .settings-page .greeting-animation-select [role='option'] * {
   color: #fff !important;
 }
 

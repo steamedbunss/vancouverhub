@@ -31,6 +31,16 @@ export const DEFAULT_USER_CONFIG: UserConfig = {
     neonBordersEnabled: true,
     weatherOverlayOpacity: 55,
   },
+  greetingAnimation: {
+    animateOn: 'view',
+    clickMode: 'once',
+    speed: 60,
+    maxIterations: 10,
+    repeatIntervalSeconds: 5,
+    revealDirection: 'start',
+    sequential: true,
+    useOriginalCharsOnly: false,
+  },
   navVisible: {
     'local-events': true,
     environment: true,
@@ -75,6 +85,10 @@ export function loadUserConfig(): UserConfig {
       appearance: {
         ...DEFAULT_USER_CONFIG.appearance,
         ...parsed.appearance,
+      },
+      greetingAnimation: {
+        ...DEFAULT_USER_CONFIG.greetingAnimation,
+        ...parsed.greetingAnimation,
       },
       navVisible: {
         ...DEFAULT_USER_CONFIG.navVisible,

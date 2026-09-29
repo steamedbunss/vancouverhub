@@ -35,6 +35,22 @@ export interface AppearancePreferences {
   weatherOverlayOpacity: number
 }
 
+export type GreetingAnimationTrigger = 'view' | 'hover' | 'click'
+export type GreetingAnimationClickMode = 'once' | 'toggle'
+export type GreetingAnimationDirection = 'start' | 'end' | 'center'
+
+//declaring the animation settings for the signed-in dashboard greeting
+export interface GreetingAnimationPreferences {
+  animateOn: GreetingAnimationTrigger
+  clickMode: GreetingAnimationClickMode
+  speed: number
+  maxIterations: number
+  repeatIntervalSeconds: number
+  revealDirection: GreetingAnimationDirection
+  sequential: boolean
+  useOriginalCharsOnly: boolean
+}
+
 //declaring which alert categories the user wants to receive
 export interface AlertPreferences {
   airQuality: boolean
@@ -60,6 +76,7 @@ export interface UserConfig {
   alertThresholds: AlertThresholds
   deliveryMethod: DeliveryMethod
   appearance: AppearancePreferences
+  greetingAnimation: GreetingAnimationPreferences
   navVisible: Record<CategoryId, boolean>
   dashboardVisible: Record<CategoryId, boolean>
 }

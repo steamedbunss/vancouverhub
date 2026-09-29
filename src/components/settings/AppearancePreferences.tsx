@@ -1,6 +1,8 @@
 import { useUserConfig } from '../../context/UserConfigContext'
+import { useAuth } from '../../context/AuthContext'
 import type { GradientPreset } from '../../types'
 import { RainbowText } from '../RainbowText'
+import { DecryptedText } from '../DecryptedText'
 import { Toggle } from '../ui/Toggle'
 
 //constant list of gradient preset options for the appearance settings dropdown
@@ -28,15 +30,93 @@ const PRESET_COLORS: Partial<Record<GradientPreset, [string, string, string]>> =
   monochrome: ['#ffffff', '#94a3b8', '#334155'],
 }
 
+//This custom menu keeps the selected value and each option readable in both themes.
+interface GreetingAnimationOption {
+  value: string
+  label: string
+}
+
+function GreetingAnimationSelect({
+  label,
+  value,
+  options,
+  onChange,
+  disabled = false,
+}: {
+  label: string
+  value: string
+  options: GreetingAnimationOption[]
+  onChange: (value: string) => void
+  disabled?: boolean
+}) {
+  const selectedOption = options.find((option) => option.value === value)
+
+  return (
+    <div className={`greeting-animation-select ${disabled ? 'opacity-50' : ''}`}>
+      <span className="text-sm font-semibold">{label}</span>
+      <details
+        className="group relative mt-2"
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') {
+            event.currentTarget.open = false
+            event.currentTarget.querySelector('summary')?.focus()
+          }
+        }}
+      >
+        <summary
+          aria-label={`${label}: ${selectedOption?.label ?? value}`}
+          aria-disabled={disabled}
+          onClick={(event) => {
+            if (disabled) event.preventDefault()
+          }}
+          className="flex cursor-pointer list-none items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:border-gray-600 dark:bg-gray-950 dark:text-white [&::-webkit-details-marker]:hidden"
+        >
+          <span>{selectedOption?.label ?? value}</span>
+          <span aria-hidden="true" className="transition-transform group-open:rotate-180">⌄</span>
+        </summary>
+        <div role="listbox" aria-label={label} className="absolute top-full left-0 z-50 mt-1 w-full overflow-hidden rounded-lg border border-gray-300 bg-white py-1 text-slate-950 shadow-xl dark:border-gray-600 dark:bg-gray-900 dark:text-white">
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="option"
+              aria-selected={value === option.value}
+              onClick={(event) => {
+                onChange(option.value)
+                const details = event.currentTarget.closest('details')
+                if (details) details.open = false
+              }}
+              className={`block w-full px-3 py-2 text-left text-sm transition-colors ${
+                value === option.value
+                  ? 'bg-blue-100 font-semibold text-slate-950 dark:bg-blue-900 dark:text-white'
+                  : 'text-slate-950 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-800'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </details>
+    </div>
+  )
+}
+
 //AppearancePreferences controls gradient, neon border, and weather overlay settings
 export function AppearancePreferences() {
   const { draft, updateDraft } = useUserConfig()
+  const { user } = useAuth()
   const appearance = draft.appearance
+  const greetingAnimation = draft.greetingAnimation
 
   //updateAppearance merges partial appearance changes into the draft config
   const updateAppearance = (updates: Partial<typeof appearance>) => {
     updateDraft({ appearance: { ...appearance, ...updates } })
   }//updateAppearance
+
+  //updateGreetingAnimation changes the live draft until the user saves Settings.
+  const updateGreetingAnimation = (updates: Partial<typeof greetingAnimation>) => {
+    updateDraft({ greetingAnimation: { ...greetingAnimation, ...updates } })
+  }//updateGreetingAnimation
 
   //previewColors picks custom colors or the preset palette for the live preview
   const previewColors =
@@ -191,6 +271,129 @@ export function AppearancePreferences() {
           Reset gradient
         </button>
       </div>
+
+      <details className="group mt-8 border-t border-gray-200 pt-6 dark:border-gray-700">
+        <summary className="flex cursor-pointer list-none items-start justify-between gap-4 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600">
+          <span>
+            <span className="text-lg font-bold tracking-tight">Dashboard greeting animation</span>
+            <span className="mt-1 block text-sm text-gray-600 dark:text-gray-300">
+              Customize how your signed-in dashboard greeting reveals itself.
+            </span>
+          </span>
+          <span aria-hidden="true" className="mt-1 text-xl transition-transform group-open:rotate-180">⌄</span>
+        </summary>
+        <div className="mt-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <GreetingAnimationSelect
+            label="Animate on"
+            value={greetingAnimation.animateOn}
+            options={[
+              { value: 'view', label: 'View' },
+              { value: 'hover', label: 'Hover' },
+              { value: 'click', label: 'Click' },
+            ]}
+            onChange={(animateOn) => updateGreetingAnimation({ animateOn: animateOn as typeof greetingAnimation.animateOn })}
+          />
+
+          <GreetingAnimationSelect
+            label="Click mode"
+            value={greetingAnimation.clickMode}
+            disabled={greetingAnimation.animateOn !== 'click'}
+            options={[
+              { value: 'once', label: 'Once' },
+              { value: 'toggle', label: 'Toggle' },
+            ]}
+            onChange={(clickMode) => updateGreetingAnimation({ clickMode: clickMode as typeof greetingAnimation.clickMode })}
+          />
+
+          <GreetingAnimationSelect
+            label="Direction"
+            value={greetingAnimation.revealDirection}
+            options={[
+              { value: 'start', label: 'Start' },
+              { value: 'end', label: 'End' },
+              { value: 'center', label: 'Center' },
+            ]}
+            onChange={(revealDirection) => updateGreetingAnimation({ revealDirection: revealDirection as typeof greetingAnimation.revealDirection })}
+          />
+
+          <div>
+            <label className="flex items-center justify-between text-sm font-semibold" htmlFor="greeting-speed">
+              Speed <span className="font-normal">{greetingAnimation.speed} ms</span>
+            </label>
+            <input
+              id="greeting-speed"
+              type="range"
+              min="20"
+              max="200"
+              step="10"
+              value={greetingAnimation.speed}
+              onChange={(event) => updateGreetingAnimation({ speed: Number(event.target.value) })}
+              className="mt-3 w-full accent-red-500"
+            />
+          </div>
+
+          <div>
+            <label className="flex items-center justify-between text-sm font-semibold" htmlFor="greeting-iterations">
+              Iterations <span className="font-normal">{greetingAnimation.maxIterations}</span>
+            </label>
+            <input
+              id="greeting-iterations"
+              type="range"
+              min="1"
+              max="50"
+              step="1"
+              value={greetingAnimation.maxIterations}
+              onChange={(event) => updateGreetingAnimation({ maxIterations: Number(event.target.value) })}
+              className="mt-3 w-full accent-red-500"
+            />
+          </div>
+
+          {greetingAnimation.animateOn === 'view' && (
+            <div>
+              <label className="flex items-center justify-between text-sm font-semibold" htmlFor="greeting-repeat-interval">
+                Repeat every <span className="font-normal">{greetingAnimation.repeatIntervalSeconds} sec</span>
+              </label>
+              <input
+                id="greeting-repeat-interval"
+                type="range"
+                min="1"
+                max="60"
+                step="1"
+                value={greetingAnimation.repeatIntervalSeconds}
+                onChange={(event) => updateGreetingAnimation({ repeatIntervalSeconds: Number(event.target.value) })}
+                className="mt-3 w-full accent-red-500"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="mt-2 divide-y divide-gray-200 dark:divide-gray-700">
+          <Toggle
+            checked={greetingAnimation.sequential}
+            onChange={(sequential) => updateGreetingAnimation({ sequential })}
+            label="Sequential reveal"
+          />
+          <Toggle
+            checked={greetingAnimation.useOriginalCharsOnly}
+            onChange={(useOriginalCharsOnly) => updateGreetingAnimation({ useOriginalCharsOnly })}
+            label="Use original characters"
+          />
+        </div>
+
+        <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-center dark:border-gray-700 dark:bg-gray-950">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Live preview</p>
+          <span className="rainbow-text text-2xl font-black">
+            <DecryptedText
+              key={JSON.stringify(greetingAnimation)}
+              text={`Greetings, ${user?.username ?? 'Guest'}!`}
+              {...greetingAnimation}
+              className="rainbow-text-face animate-rainbow-flow"
+            />
+          </span>
+        </div>
+        </div>
+      </details>
     </section>
   )
 }//AppearancePreferences
